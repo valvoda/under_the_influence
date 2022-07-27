@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # find the last trained model
     model_path = '../train/trained_models/precedent/bert/facts/*'
     model_path = find_newest(model_path)
-    model = torch.load(model_path + '/model.pt', map_location=torch.device(device))
+    model = torch.load(model_path + '/model.pt', map_location=torch.device('cpu'))
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
     # tokenizer_dir, test, log, max_len, batch_size
