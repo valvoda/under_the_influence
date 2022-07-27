@@ -1,0 +1,15 @@
+*.pyc
+outdir/*
+data/*
+__pycache__/
+build/
+dist/
+bin/
+lib/
+.mypy_cache/*
+lib64
+logfile.log
+pytorch_influence_functions.egg-info/
+pyvenv.cfg
+.vscode/
+.idea/
