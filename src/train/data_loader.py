@@ -42,7 +42,7 @@ class DataPrep:
             t_size = 2
         else:
             test_size = 100000
-
+            t_size = 100000
         print("Facts in training data")
         train_inputs = train_facts
         train_masks = train_masks

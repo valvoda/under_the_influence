@@ -64,6 +64,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--max_len", type=int, default=512, required=False)
+    parser.add_argument("--gpu", type=int, default=1, required=False)
     parser.add_argument("--batch_size", type=int, default=16, required=False)
     parser.add_argument("--test", dest='test', action='store_true')
     args = parser.parse_args()
@@ -81,7 +82,7 @@ if __name__ == '__main__':
 
     ptif.init_logging()
     config = ptif.get_default_config()
-    config['gpu'] = -1
+    config['gpu'] = args.gpu
     config['test_sample_num'] = False
     influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
 
