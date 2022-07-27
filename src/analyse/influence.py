@@ -1,6 +1,8 @@
+import sys
+sys.path.append("../../")
+
 import pytorch_influence_functions as ptif
 import torch
-import sys
 from src.train.data_loader import DataPrep
 import pickle
 import json
