@@ -94,10 +94,11 @@ class Classifier:
             all_truths += b_labels.cpu().float().tolist()
             all_preds += preds.cpu().float().tolist()
 
-            if not eval:
+            if eval != 'val' and eval != 'test':
                 # Perform a backward pass to calculate gradients
                 loss.backward()
                 # Clip the norm of the gradients to 1.0 to prevent "exploding gradients"
+
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
                 # Update parameters and the learning rate
@@ -137,12 +138,9 @@ class Classifier:
 
     def print_results(self, epoch_i, train, val, test=None):
         # Print performance over the entire training data
-        print(
-            f"{'Epoch':^7} | {'Batch':^7} | {'Train Loss':^12} | {'Val Loss':^10} | {'Val Acc':^9} | {'Val F1':^9} | {'Val Prec':^9} | {'Val Rec':^9} | {'Elapsed':^9}")
-        print("-" * 105)
         print("-" * 105)
         print(
-            f"{epoch_i + 1:^7} | all | {train['train_loss']:^12.6f} | {val['val_loss']:^10.6f} | {val['val_accuracy']:^9.2f} | "
+            f"{epoch_i + 1:^7} | {'nan':^7} | {train['train_loss']:^12.6f} | {val['val_loss']:^10.6f} | {val['val_accuracy']:^9.2f} | "
             f"{val['val_f1']:^9.2f} | {val['val_precision']:^9.2f} | {val['val_recall']:^9.2f} | ")
         print("-" * 105)
         print("\n")
@@ -160,6 +158,10 @@ class Classifier:
         best_loss = 100
 
         for epoch_i in range(self.args.epochs):
+            print(
+                f"{'Epoch':^7} | {'Batch':^7} | {'Train Loss':^12} | {'Val Loss':^10} | {'Val Acc':^9} | {'Val F1':^9} | {'Val Prec':^9} | {'Val Rec':^9} | {'Elapsed':^9}")
+            print("-" * 105)
+
             train, _ = self.run_epoch(train_dataloader, epoch_i, eval='train')
 
             # run validation
