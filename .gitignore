@@ -1,0 +1,13 @@
+/datasets/*/*/*
+/datasets/*/ECHR.pkl
+/datasets/*/ECHR.txt
+/datasets/*/precedent.zip
+/datasets/*/alleged.zip
+/datasets/*/dev.jsonl
+/datasets/*/test.jsonl
+/datasets/*/train.jsonl
+/datasets/*/precedent.zip
+!/datasets/precedent/bert/Archive.zip
+/src/analyse/outdir
+/src/train/trained_models
+.idea
