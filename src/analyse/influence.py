@@ -69,11 +69,16 @@ if __name__ == '__main__':
     parser.add_argument("--test", dest='test', action='store_true')
     args = parser.parse_args()
 
+    if args.gpu >= 0:
+        device = 'gpu'
+    else:
+        device = 'cpu'
+
     sys.path.insert(0, '../train')
     # find the last trained model
     model_path = '../train/trained_models/precedent/bert/facts/*'
     model_path = find_newest(model_path)
-    model = torch.load(model_path + '/model.pt')
+    model = torch.load(model_path + '/model.pt', map_location=device)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
     # tokenizer_dir, test, log, max_len, batch_size
