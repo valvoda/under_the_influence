@@ -87,3 +87,4 @@ if __name__ == '__main__':
     influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
 
     label_results(tokenized_dir, args.test)
+    print("DONE!")
