@@ -369,11 +369,9 @@ def calc_influence_single(model, train_loader, test_loader, test_id_num, gpu,
                 tmp_influence.append(torch.sum(k * j).data)
         tmp_influence = -sum(tmp_influence) / train_dataset_size
 
-        influences.append(tmp_influence)
+        influences.append(tmp_influence.cpu())
         display_progress("Calc. influence function: ", i, train_dataset_size)
 
-    import pdb
-    pdb.set_trace()
     harmful = np.argsort(influences)
     helpful = harmful[::-1]
 
