@@ -313,16 +313,17 @@ def calc_influence_single(model, train_loader, test_loader, test_id_num, gpu,
             the influence was calculated for"""
     # Calculate s_test vectors if not provided
     if not s_test_vec:
-        b_input_ids, b_attn_mask, b_labels, b_claims = test_loader.dataset[test_id_num]
+        if torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = 'cpu'
+
+        b_input_ids, b_attn_mask, b_labels, b_claims = tuple(t.to(device) for t in test_loader.dataset[test_id_num])
         b_input_ids = b_input_ids.squeeze(1)
         b_attn_mask = b_attn_mask.squeeze(1)
         # z_test = test_loader.collate_fn([z_test])
         # t_test = test_loader.collate_fn([t_test])
         # TODO fix gpu support
-        if torch.cuda.is_available():
-            device = "cuda"
-        else:
-            device = 'cpu'
 
         s_test_vec = calc_s_test_single(b_input_ids, b_attn_mask, b_labels, b_claims, model, train_loader,
                                         gpu, recursion_depth=recursion_depth,
@@ -332,7 +333,12 @@ def calc_influence_single(model, train_loader, test_loader, test_id_num, gpu,
     train_dataset_size = len(train_loader.dataset)
     influences = []
     for i in range(train_dataset_size):
-        b_input_ids, b_attn_mask, b_labels, b_claims = train_loader.dataset[i]
+        if torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = 'cpu'
+
+        b_input_ids, b_attn_mask, b_labels, b_claims = tuple(t.to(device) for t in train_loader.dataset[test_id_num])
         b_input_ids = b_input_ids.squeeze(1)
         b_attn_mask = b_attn_mask.squeeze(1)
         #
