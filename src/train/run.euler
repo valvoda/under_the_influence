@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Job details
+TIME=02:00  # HH:MM (default: 04:00, max: 240:00)
+NUM_GPUS=1  # GPUs per node
+GPU_MODEL=GeForceRTX2080Ti #GeForceGTX1080Ti  # Choices: GeForceGTX1080,GeForceGTX1080Ti,GeForceRTX2080Ti,TeslaV100_SXM2_32GB
+NUM_CPUS=1  # Number of cores (default: 1)
+CPU_RAM=16384 # RAM for each core (default: 1024)
+#OUTFILE=lsf.oJOBID  # default: lsf.oJOBID
+
+# Load modules
+module load gcc/6.3.0 python_gpu/3.7.4 hdf5/1.10.1 eth_proxy
+
+# Submit job
+bsub -W $TIME \
+     -n $NUM_CPUS \
+     -R "rusage[mem=${CPU_RAM},ngpus_excl_p=${NUM_GPUS}]" \
+     -R "select[gpu_model0==${GPU_MODEL}]" \
+     -R "select[gpu_mtotal0>=30000]" \
+     "source ~/.bashrc; \
+     conda activate law; \
+     python train.py"
