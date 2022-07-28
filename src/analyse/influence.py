@@ -67,7 +67,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--max_len", type=int, default=512, required=False)
     parser.add_argument("--gpu", type=int, default=1, required=False)
-    parser.add_argument("--batch_size", type=int, default=2, required=False)
+    parser.add_argument("--batch_size", type=int, default=8, required=False)
     parser.add_argument("--test", dest='test', action='store_true')
     args = parser.parse_args()
 
