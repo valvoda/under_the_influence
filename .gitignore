@@ -8,5 +8,5 @@
 /datasets/*/train.jsonl
 /datasets/*/precedent.zip
 !/datasets/precedent/bert/Archive.zip
-/src/analyse/outdir
+!/src/analyse/outdir
 /src/train/trained_models
