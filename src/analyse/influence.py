@@ -90,27 +90,29 @@ if __name__ == '__main__':
     parser.add_argument("--test", dest='test', action='store_true')
     args = parser.parse_args()
 
-    # if args.gpu >= 0:
-    #     device = 'cuda'
-    # else:
-    #     device = 'cpu'
-    #
+    if args.gpu >= 0:
+        device = 'cuda'
+    else:
+        device = 'cpu'
+
     sys.path.insert(0, '../train')
-    # # find the last trained model
-    # model_path = '../train/trained_models/precedent/bert/facts/*'
-    # model_path = find_newest(model_path)
-    # model = torch.load(model_path + '/model.pt', map_location=torch.device(device))
-    #
-    # tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
-    # # tokenizer_dir, test, log, max_len, batch_size
-    # loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size)
-    # train_dataloader, val_dataloader, test_dataloader = loader.load()
-    #
-    # ptif.init_logging()
-    # config = ptif.get_default_config()
-    # config['gpu'] = args.gpu
-    # config['test_sample_num'] = False
-    # influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
+    # find the last trained model
+    model_path = '../train/trained_models/precedent/bert/facts/*'
+    model_path = find_newest(model_path)
+    model = torch.load(model_path + '/model.pt', map_location=torch.device(device))
+
+    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
+    # tokenizer_dir, test, log, max_len, batch_size
+    loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size)
+    train_dataloader, val_dataloader, test_dataloader = loader.load()
+
+    ptif.init_logging()
+    config = ptif.get_default_config()
+    config['gpu'] = args.gpu
+    config['test_sample_num'] = False
+    config['num_classes'] = 14
+    config['test_start_index'] = 12
+    influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
     label_results(tokenized_dir, args.test)
