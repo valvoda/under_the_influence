@@ -338,7 +338,7 @@ def calc_influence_single(model, train_loader, test_loader, test_id_num, gpu,
         else:
             device = 'cpu'
 
-        b_input_ids, b_attn_mask, b_labels, b_claims = tuple(t.to(device) for t in train_loader.dataset[test_id_num])
+        b_input_ids, b_attn_mask, b_labels, b_claims = tuple(t.to(device) for t in train_loader.dataset[i])
         b_input_ids = b_input_ids.squeeze(1)
         b_attn_mask = b_attn_mask.squeeze(1)
         #
