@@ -111,7 +111,7 @@ if __name__ == '__main__':
     config['gpu'] = args.gpu
     config['test_sample_num'] = False
     config['num_classes'] = 14
-    config['test_start_index'] = 12
+    # config['test_start_index'] = 2
     influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
