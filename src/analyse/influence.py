@@ -9,6 +9,7 @@ import json
 import glob
 import os
 import argparse
+import numpy as np
 
 def find_newest(path):
     list_of_files = glob.glob(path)
@@ -51,15 +52,33 @@ def label_results(tokenized_dir, test):
 
     result_path = './outdir/*'
     result_path = find_newest(result_path)
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_8.json'
 
     with open(result_path, 'r') as jsonFile:
         data = json.load(jsonFile)
 
     for i in range(len(test_ids)):
-        data[str(i)]['true'] = test_precedent[i]
-        data[str(i)]['id'] = test_ids[i]
+        try:
+            data[str(i)]['true'] = list(set(test_precedent[i]))
+            data[str(i)]['id'] = test_ids[i]
 
-    with open(result_path, 'w') as jsonFile:
+            prec = []
+            not_prec = []
+            for t in data[str(i)]['true']:
+                prec.append(data[str(i)]['influence'][t])
+
+            for j in range(len(data[str(i)]['influence'])):
+                if j not in data[str(i)]['true']:
+                    not_prec.append(data[str(i)]['influence'][i])
+
+            print(i, np.average(prec) > np.average(not_prec), np.average(prec), np.average(not_prec))
+            data[str(i)]['avg_baseline'] = [np.average(prec), np.average(not_prec)]
+
+
+        except:
+            pass
+
+    with open(result_path+'_test.json', 'w') as jsonFile:
         json.dump(data, jsonFile, indent=4)
 
 if __name__ == '__main__':
@@ -71,27 +90,28 @@ if __name__ == '__main__':
     parser.add_argument("--test", dest='test', action='store_true')
     args = parser.parse_args()
 
-    if args.gpu >= 0:
-        device = 'cuda'
-    else:
-        device = 'cpu'
-
+    # if args.gpu >= 0:
+    #     device = 'cuda'
+    # else:
+    #     device = 'cpu'
+    #
     sys.path.insert(0, '../train')
-    # find the last trained model
-    model_path = '../train/trained_models/precedent/bert/facts/*'
-    model_path = find_newest(model_path)
-    model = torch.load(model_path + '/model.pt', map_location=torch.device(device))
+    # # find the last trained model
+    # model_path = '../train/trained_models/precedent/bert/facts/*'
+    # model_path = find_newest(model_path)
+    # model = torch.load(model_path + '/model.pt', map_location=torch.device(device))
+    #
+    # tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
+    # # tokenizer_dir, test, log, max_len, batch_size
+    # loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size)
+    # train_dataloader, val_dataloader, test_dataloader = loader.load()
+    #
+    # ptif.init_logging()
+    # config = ptif.get_default_config()
+    # config['gpu'] = args.gpu
+    # config['test_sample_num'] = False
+    # influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
-    # tokenizer_dir, test, log, max_len, batch_size
-    loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size)
-    train_dataloader, val_dataloader, test_dataloader = loader.load()
-
-    ptif.init_logging()
-    config = ptif.get_default_config()
-    config['gpu'] = args.gpu
-    config['test_sample_num'] = False
-    influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader)
-
     label_results(tokenized_dir, args.test)
     print("DONE!")
