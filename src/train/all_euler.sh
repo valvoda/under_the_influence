@@ -7,8 +7,10 @@ do
       for inp in facts
       do
         for model in legal_bert
-        echo ${lr} ${hidden} ${dropout} ${inp} ${model}
-        LR=$lr HIDDEN=$hidden DROP=$dropout  INP=$inp MOD=$model bash run.euler
+        do
+          echo ${lr} ${hidden} ${dropout} ${inp} ${model}
+          LR=$lr HIDDEN=$hidden DROP=$dropout  INP=$inp MOD=$model bash run.euler
+        done
       done
     done
   done
