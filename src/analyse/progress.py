@@ -27,9 +27,7 @@ def find_best(root, input):
                     try:
                         val_loss, val_f1 = get_score(path)
                     except:
-                        print("Deleted:", path)
-                        shutil.rmtree(path)
-                        val_loss = 101
+                        pass
                     if val_loss < best_loss:
                         # print(path, val_f1)
                         best_loss = val_loss

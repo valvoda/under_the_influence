@@ -199,6 +199,7 @@ class Classifier:
         train_dataloader, val_dataloader, test_dataloader = loader.load()
         self.train(train_dataloader, val_dataloader, test_dataloader)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--max_len", type=int, default=512, required=False)
