@@ -216,7 +216,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
-    model = BertModel.from_pretrained('bert-base-uncased', gradient_checkpointing=True, return_dict=True)
+    if args.model == "bert":
+        model = BertModel.from_pretrained('bert-base-uncased', gradient_checkpointing=True, return_dict=True)
+    elif args.model == "legal_bert":
+        model = AutoModel.from_pretrained("nlpaueb/legal-bert-base-uncased", return_dict=True)
+    else:
+        print("Error: Unsupported Model")
 
     tokenized_dir = "../datasets/" + args.dataset + "/" + args.model
 

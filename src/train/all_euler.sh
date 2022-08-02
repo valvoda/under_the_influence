@@ -4,10 +4,11 @@ do
   do
     for lr in 0.00003 0.0003 0.000003
     do
-      for inp in facts arguments
+      for inp in facts
       do
-        echo ${lr} ${hidden} ${dropout} ${inp}
-        LR=$lr HIDDEN=$hidden DROP=$dropout  INP=$inp bash run.euler
+        for model in legal_bert
+        echo ${lr} ${hidden} ${dropout} ${inp} ${model}
+        LR=$lr HIDDEN=$hidden DROP=$dropout  INP=$inp MOD=$model bash run.euler
       done
     done
   done
