@@ -194,7 +194,7 @@ class Classifier:
 
         self.log.save_results({**val, **test}, outputs)
 
-    def run(self, tokenized_dir=None, test=False, inference=False):
+    def run(self, tokenized_dir=None, test=False):
         loader = DataPrep(tokenized_dir, test, self.log, self.args.max_len, self.args.batch_size, self.args.input)
         train_dataloader, val_dataloader, test_dataloader = loader.load()
         self.train(train_dataloader, val_dataloader, test_dataloader)
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=16, required=False)
     parser.add_argument("--learning_rate", type=float, default=3e-5, required=False)
     parser.add_argument("--dropout", type=float, default=0.2, required=False)
-    parser.add_argument("--n_hidden", type=float, default=50, required=False)
+    parser.add_argument("--n_hidden", type=int, default=50, required=False)
     parser.add_argument("--epochs", type=int, default=10, required=False)
     parser.add_argument("--model", type=str, default="bert", required=False)
     parser.add_argument("--dataset", type=str, default="precedent", required=False) # precedent, alleged
