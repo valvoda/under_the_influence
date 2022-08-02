@@ -3,7 +3,7 @@ sys.path.append("../../")
 
 import pytorch_influence_functions as ptif
 import torch
-from src.train.data_loader import DataPrep
+from src.preprocess.data_loader import DataPrep
 import pickle
 import json
 import glob

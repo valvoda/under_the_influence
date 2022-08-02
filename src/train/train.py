@@ -1,6 +1,9 @@
+import sys
+sys.path.append("../../")
+
 from models.bert_classifier import BertClassifier
 from logger import Logger
-from data_loader import DataPrep
+from src.preprocess.data_loader import DataPrep
 # from process_results import get_best
 
 from transformers import AdamW, get_linear_schedule_with_warmup, BertModel, AutoModel, LongformerModel
@@ -192,7 +195,7 @@ class Classifier:
         self.log.save_results({**val, **test}, outputs)
 
     def run(self, tokenized_dir=None, test=False, inference=False):
-        loader = DataPrep(tokenized_dir, test, self.log, self.args.max_len, self.args.batch_size)
+        loader = DataPrep(tokenized_dir, test, self.log, self.args.max_len, self.args.batch_size, self.args.input)
         train_dataloader, val_dataloader, test_dataloader = loader.load()
         self.train(train_dataloader, val_dataloader, test_dataloader)
 

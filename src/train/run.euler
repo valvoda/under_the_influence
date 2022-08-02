@@ -19,4 +19,4 @@ bsub -W $TIME \
      -R "select[gpu_mtotal0>=30000]" \
      "source ~/.bashrc; \
      conda activate law; \
-     python train.py"
+     python train.py --learning_rate ${LR} --n_hidden ${HIDDEN} --dropout ${DROP} --input ${INP}"

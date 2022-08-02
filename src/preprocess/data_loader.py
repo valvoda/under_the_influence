@@ -6,12 +6,13 @@ import numpy as np
 
 class DataPrep:
 
-    def __init__(self, tokenizer_dir, test, log, max_len, batch_size):
+    def __init__(self, tokenizer_dir, test, log, max_len, batch_size, input):
         self.tokenized_dir = tokenizer_dir
         self.test = test
         self.log = log
         self.max_len = max_len
         self.batch_size = batch_size
+        self.input = input
 
     def make_loader(self, input, mask, labels, claims, train=True):
         labels = torch.tensor(labels)
@@ -44,13 +45,22 @@ class DataPrep:
             test_size = 100000
             t_size = 100000
 
-        print("Facts in training data")
-        train_inputs = train_facts
-        train_masks = train_masks
-        val_inputs = val_facts
-        val_masks = val_masks
-        test_inputs = test_facts
-        test_masks = test_masks
+        if self.input == 'facts':
+            print("Facts in training data")
+            train_inputs = train_facts
+            train_masks = train_masks
+            val_inputs = val_facts
+            val_masks = val_masks
+            test_inputs = test_facts
+            test_masks = test_masks
+        else:
+            print("Arguments in training data")
+            train_inputs = train_arguments
+            train_masks = train_masks_arguments
+            val_inputs = val_facts
+            val_masks = val_masks
+            test_inputs = test_facts
+            test_masks = test_masks
 
         train_inputs, train_masks = train_inputs[:test_size, :, :self.max_len], train_masks[:test_size, :, :self.max_len]
         val_inputs, val_masks = val_inputs[:test_size, :, :self.max_len], val_masks[:test_size, :, :self.max_len]
