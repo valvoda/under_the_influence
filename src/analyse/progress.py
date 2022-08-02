@@ -1,10 +1,6 @@
 import sys
 sys.path.append("../../")
 
-import pytorch_influence_functions as ptif
-import torch
-from src.preprocess.data_loader import DataPrep
-import glob
 import os
 import argparse
 import csv
