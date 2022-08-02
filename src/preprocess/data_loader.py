@@ -71,6 +71,8 @@ class DataPrep:
             test_masks = test_masks
             train_outcomes = torch.cat([torch.tensor(train_outcomes), torch.tensor(train_outcomes)], dim=0)
             val_outcomes = torch.cat([torch.tensor(val_outcomes), torch.tensor(val_outcomes)], dim=0)
+            train_claims = torch.cat([torch.tensor(train_claims), torch.tensor(train_claims)], dim=0)
+            val_claims = torch.cat([torch.tensor(val_claims), torch.tensor(val_claims)], dim=0)
         else:
             print("Error: Unsupported data type")
             return
