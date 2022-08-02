@@ -53,7 +53,7 @@ class DataPrep:
             val_masks = val_masks
             test_inputs = test_facts
             test_masks = test_masks
-        else:
+        elif self.input == 'arguments':
             print("Arguments in training data")
             train_inputs = train_arguments
             train_masks = train_masks_arguments
@@ -61,6 +61,19 @@ class DataPrep:
             val_masks = val_masks
             test_inputs = test_facts
             test_masks = test_masks
+        elif self.input == 'both':
+            print("Arguments and facts in training data")
+            train_inputs = torch.cat([train_facts, train_arguments], dim=0)
+            train_masks =  torch.cat([train_masks, train_masks_arguments], dim=0)
+            val_inputs = torch.cat([val_facts, val_arguments], dim=0)
+            val_masks = torch.cat([val_masks, val_masks_arguments], dim=0)
+            test_inputs = test_facts
+            test_masks = test_masks
+            train_outcomes = torch.cat([torch.tensor(train_outcomes), torch.tensor(train_outcomes)], dim=0)
+            val_outcomes = torch.cat([torch.tensor(val_outcomes), torch.tensor(val_outcomes)], dim=0)
+        else:
+            print("Error: Unsupported data type")
+            return
 
         train_inputs, train_masks = train_inputs[:test_size, :, :self.max_len], train_masks[:test_size, :, :self.max_len]
         val_inputs, val_masks = val_inputs[:test_size, :, :self.max_len], val_masks[:test_size, :, :self.max_len]
