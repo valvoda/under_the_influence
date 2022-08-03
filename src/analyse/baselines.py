@@ -48,7 +48,7 @@ def initialise_data(tokenized_dir):
 
     return train_ids, test_ids, test_precedent, train_outcomes
 
-def baseline_outcome(tokenized_dir):
+def baseline_outcome(tokenized_dir, result_path):
     train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
 
     test_precedent = numerize_precedent(train_ids, test_precedent)
@@ -56,8 +56,8 @@ def baseline_outcome(tokenized_dir):
 
     # result_path = './outdir/*'
     # result_path = find_newest(result_path)
-    result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
-    print(result_path)
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
+    # print(result_path)
 
     with open(result_path, 'r') as jsonFile:
         data = json.load(jsonFile)
@@ -72,7 +72,8 @@ def baseline_outcome(tokenized_dir):
 
             prec = []
             not_prec = []
-            for j in range(len(data[str(i)]['influence'])):
+            for j in range(len(l_dic)):
+                print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
                 if list(l_dic[j]) == data[str(i)]['label']:
                     prec.append(data[str(i)]['influence'][j])
                 else:
@@ -91,7 +92,7 @@ def baseline_outcome(tokenized_dir):
     print('Outcome Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
 
 
-def baseline_art(tokenized_dir):
+def baseline_art(tokenized_dir, result_path):
     train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
 
     test_precedent = numerize_precedent(train_ids, test_precedent)
@@ -99,8 +100,8 @@ def baseline_art(tokenized_dir):
 
     # result_path = './outdir/*'
     # result_path = find_newest(result_path)
-    result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
-    print(result_path)
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
+    # print(result_path)
 
     with open(result_path, 'r') as jsonFile:
         data = json.load(jsonFile)
@@ -141,15 +142,15 @@ def baseline_art(tokenized_dir):
         else:
             print(f'Per Article {art} Baseline Accuracy:', len(all_pos[art])/(len(all_pos[art])+len(all_neg[art])), f'{len(all_pos[art])}/{len(all_pos[art])+len(all_neg[art])}')
 
-def baseline_avg(tokenized_dir):
+def baseline_avg(tokenized_dir, result_path):
     train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
 
     test_precedent = numerize_precedent(train_ids, test_precedent)
     l_dic = label_dic(train_outcomes)
 
-    result_path = './outdir/*'
+    # result_path = './outdir/*'
     # result_path = find_newest(result_path)
-    result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
 
     print(result_path)
 
@@ -193,6 +194,7 @@ def baseline_avg(tokenized_dir):
 if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
-    baseline_avg(tokenized_dir)
-    baseline_outcome(tokenized_dir)
-    baseline_art(tokenized_dir)
+    result_path = './outdir/influence_results_tmp_0_False_last-i_61_2022-08-03-09-28-47.json'
+    # baseline_avg(tokenized_dir, result_path)
+    baseline_outcome(tokenized_dir, result_path)
+    # baseline_art(tokenized_dir, result_path)
