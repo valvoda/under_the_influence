@@ -517,7 +517,6 @@ def calc_img_wise(config, model, train_loader, test_loader, model_path, start, e
         influences[str(i)]['helpful'] = helpful[:500]
 
         tmp_influences_path = outdir.joinpath(f"{model_path.split('/')[-1]}_"
-                                                f"influence_results_tmp_"
                                                 f"{start}_{end}_"
                                                 f"{test_start_index}_"
                                                 f"{test_sample_num}"
@@ -535,7 +534,7 @@ def calc_img_wise(config, model, train_loader, test_loader, model_path, start, e
 
     influences_path = outdir.joinpath(f"{model_path.split('/')[-1]}_"
                                         f"{start}_{end}_"
-                                        f"influence_results_{test_start_index}_"
+                                        f"{test_start_index}_"
                                         f"{test_sample_num}.json")
     save_json(influences, influences_path)
 
