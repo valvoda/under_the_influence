@@ -15,7 +15,6 @@ module load gcc/6.3.0 python_gpu/3.7.4 hdf5/1.10.1 eth_proxy
 bsub -W $TIME \
      -n $NUM_CPUS \
      -R "rusage[mem=${CPU_RAM},ngpus_excl_p=${NUM_GPUS}]" \
-     -R "select[gpu_model0==${GPU_MODEL}]" \
      -R "select[gpu_mtotal0>=30000]" \
      "source ~/.bashrc; \
      conda activate law; \
