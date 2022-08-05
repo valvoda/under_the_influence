@@ -446,7 +446,7 @@ def get_dataset_sample_ids(num_samples, test_loader, num_classes=None,
     return sample_dict, sample_list
 
 
-def calc_img_wise(config, model, train_loader, test_loader):
+def calc_img_wise(config, model, train_loader, test_loader, model_path, start, end):
     """Calculates the influence function one test point at a time. Calcualtes
     the `s_test` and `grad_z` values on the fly and discards them afterwards.
 
@@ -455,7 +455,7 @@ def calc_img_wise(config, model, train_loader, test_loader):
     influences_meta = copy.deepcopy(config)
     test_sample_num = config['test_sample_num']
     test_start_index = config['test_start_index']
-    outdir = Path(config['outdir'])
+    outdir = Path(config['outdir']+"/"+"/".join(model_path.split('/')[-3:-1]))
     outdir.mkdir(exist_ok=True, parents=True)
 
     # If calculating the influence for a subset of the whole dataset,
@@ -507,6 +507,7 @@ def calc_img_wise(config, model, train_loader, test_loader):
         influences[str(i)] = {}
         # _, label = test_loader.dataset[i]
         _, _, label, _ = test_loader.dataset[i]
+        influences[str(i)]['path'] = model_path
         influences[str(i)]['label'] = label.tolist()
         influences[str(i)]['num_in_dataset'] = j
         influences[str(i)]['time_calc_influence_s'] = end_time - start_time
@@ -515,10 +516,12 @@ def calc_img_wise(config, model, train_loader, test_loader):
         influences[str(i)]['harmful'] = harmful[:500]
         influences[str(i)]['helpful'] = helpful[:500]
 
-        tmp_influences_path = outdir.joinpath(f"influence_results_tmp_"
-                                              f"{test_start_index}_"
-                                              f"{test_sample_num}"
-                                              f"_last-i_{i}.json")
+        tmp_influences_path = outdir.joinpath(f"{model_path.split('/')[-1]}_"
+                                                f"influence_results_tmp_"
+                                                f"{start}_{end}_"
+                                                f"{test_start_index}_"
+                                                f"{test_sample_num}"
+                                                f"_last-i_{i}.json")
         save_json(influences, tmp_influences_path)
         display_progress("Test samples processed: ", j, test_dataset_iter_len)
 
@@ -530,8 +533,10 @@ def calc_img_wise(config, model, train_loader, test_loader):
     logging.info("Most helpful img IDs: ")
     logging.info(helpful[:3])
 
-    influences_path = outdir.joinpath(f"influence_results_{test_start_index}_"
-                                      f"{test_sample_num}.json")
+    influences_path = outdir.joinpath(f"{model_path.split('/')[-1]}_"
+                                        f"{start}_{end}_"
+                                        f"influence_results_{test_start_index}_"
+                                        f"{test_sample_num}.json")
     save_json(influences, influences_path)
 
     return influences

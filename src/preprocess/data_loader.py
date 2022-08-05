@@ -25,7 +25,7 @@ class DataPrep:
         dataloader = DataLoader(data, sampler=sampler, batch_size=self.batch_size)
         return dataloader
 
-    def load(self):
+    def load(self, start=None, end=None):
         with open("../" + self.tokenized_dir + "/tokenized_train.pkl", "rb") as f:
             train_facts, train_masks, train_arguments, \
             train_masks_arguments, train_ids, train_claims, train_outcomes, train_precedent, _ = pickle.load(f)
@@ -39,9 +39,16 @@ class DataPrep:
             test_masks_arguments, test_ids, test_claims, test_outcomes, test_precedent, _ = pickle.load(f)
 
         if self.test:
+            t_start = 0
             test_size = 6
             t_size = 2
+        elif start != None and end != None:
+            print(f"Dataloader chunk {start} to {end}.")
+            t_size = end
+            t_start = start
+            test_size = 100000
         else:
+            t_start = 0
             test_size = 100000
             t_size = 100000
 
@@ -79,11 +86,11 @@ class DataPrep:
 
         train_inputs, train_masks = train_inputs[:test_size, :, :self.max_len], train_masks[:test_size, :, :self.max_len]
         val_inputs, val_masks = val_inputs[:test_size, :, :self.max_len], val_masks[:test_size, :, :self.max_len]
-        test_inputs, test_masks = test_inputs[:t_size, :, :self.max_len], test_masks[:t_size, :, :self.max_len]
+        test_inputs, test_masks = test_inputs[t_start:t_size, :, :self.max_len], test_masks[t_start:t_size, :, :self.max_len]
 
         pos_train_labels = train_outcomes[:test_size, :]
         pos_val_labels = val_outcomes[:test_size, :]
-        pos_test_labels = test_outcomes[:t_size, :]
+        pos_test_labels = test_outcomes[t_start:t_size, :]
 
         train_labels = pos_train_labels
         val_labels = pos_val_labels
@@ -91,7 +98,7 @@ class DataPrep:
 
         claim_train_labels = train_claims[:test_size, :]
         claim_val_labels = val_claims[:test_size, :]
-        claim_test_labels = test_claims[:t_size, :]
+        claim_test_labels = test_claims[t_start:t_size, :]
 
 
         self.n_labels = len(train_labels[1])

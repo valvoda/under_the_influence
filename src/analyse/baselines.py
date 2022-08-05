@@ -73,18 +73,20 @@ def baseline_outcome(tokenized_dir, result_path):
             prec = []
             not_prec = []
             for j in range(len(l_dic)):
-                print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
+                # print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
                 if list(l_dic[j]) == data[str(i)]['label']:
                     prec.append(data[str(i)]['influence'][j])
                 else:
                     not_prec.append(data[str(i)]['influence'][j])
 
             # print(i, np.average(prec) > np.average(not_prec), np.average(prec), np.average(not_prec))
-            data[str(i)]['outcome_baseline'] = [np.average(prec), np.average(not_prec)]
-            if np.average(prec) > np.average(not_prec):
-                all_pos.append(1)
-            else:
-                all_neg.append(1)
+            # data[str(i)]['outcome_baseline'] = [np.average(prec), np.average(not_prec)]
+            if len(prec) > 0 and len(not_prec) > 0:
+                data[str(i)]['outcome_baseline'] = [np.average(prec), np.average(not_prec)]
+                if np.average(prec) < np.average(not_prec):
+                    all_pos.append(1)
+                else:
+                    all_neg.append(1)
 
         except:
             pass
@@ -109,27 +111,28 @@ def baseline_art(tokenized_dir, result_path):
     all_pos = {k: [] for k in range(14)}
     all_neg = {k: [] for k in range(14)}
 
-    for i in range(len(test_ids)):
+    for test_case in range(len(test_ids)):
         try:
-            data[str(i)]['true'] = list(set(test_precedent[i]))
-            data[str(i)]['id'] = test_ids[i]
+            data[str(test_case)]['true'] = list(set(test_precedent[test_case]))
+            data[str(test_case)]['id'] = test_ids[test_case]
 
             prec = {}
             not_prec = {}
             for art in range(14):
                 prec[art] = []
                 not_prec[art] = []
-                for j in range(len(data[str(i)]['influence'])):
-                    if data[str(i)]['label'][art] == 1:
-                        if list(l_dic[j])[art] == 1:
-                            prec[art].append(data[str(i)]['influence'][j])
+                for influence_i in range(len(data[str(test_case)]['influence'])):
+                    if data[str(test_case)]['label'][art] == 1:
+                        if list(l_dic[influence_i])[art] == 1:
+                            prec[art].append(data[str(test_case)]['influence'][influence_i])
                         else:
-                            not_prec[art].append(data[str(i)]['influence'][j])
+                            not_prec[art].append(data[str(test_case)]['influence'][influence_i])
 
                 # print(art, i, np.average(prec[art]) > np.average(not_prec[art]), np.average(prec[art]), np.average(not_prec[art]))
                 # data[str(i)]['avg_baseline'] = [np.average(prec), np.average(not_prec)]
-                if len(prec[art]) > 0 or len(not_prec[art]) > 0:
-                    if np.average(prec[art]) > np.average(not_prec[art]):
+                if len(prec[art]) > 0 and len(not_prec[art]) > 0:
+                    # print(art, len(prec[art]), len(not_prec[art]))
+                    if np.average(prec[art]) < np.average(not_prec[art]):
                         all_pos[art].append(1)
                     else:
                         all_neg[art].append(1)
@@ -173,7 +176,7 @@ def baseline_avg(tokenized_dir, result_path):
                 if j not in data[str(i)]['true']:
                     not_prec.append(data[str(i)]['influence'][i])
 
-            if np.average(prec) > np.average(not_prec):
+            if np.average(prec) < np.average(not_prec):
                 all_pos.append(1)
                 case_baseline = 1
             else:
@@ -194,7 +197,8 @@ def baseline_avg(tokenized_dir, result_path):
 if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
-    result_path = './outdir/influence_results_tmp_0_False_last-i_61_2022-08-03-09-28-47.json'
-    # baseline_avg(tokenized_dir, result_path)
+    result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_61_2022-08-03-09-28-47.json'
+    baseline_avg(tokenized_dir, result_path)
     baseline_outcome(tokenized_dir, result_path)
-    # baseline_art(tokenized_dir, result_path)
+    baseline_art(tokenized_dir, result_path)
