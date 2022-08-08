@@ -2,6 +2,7 @@ import sys
 sys.path.append("../../")
 
 from models.bert_classifier import BertClassifier
+from models.bert_classifier import TestClassifier
 from logger import Logger
 from src.preprocess.data_loader import DataPrep
 from src.preprocess.test_dataset import TestData
@@ -24,7 +25,7 @@ class Classifier:
     def __init__(self, model, args):
         self.args = args
         self.device = self.set_cuda()
-        self.model = BertClassifier(model, args, self.device)
+        self.model = TestClassifier(model, args, self.device)
         self.optimizer = AdamW(self.model.parameters(),
                           lr=args.learning_rate, # lr=5e-5,    # Default learning rate
                           eps=1e-8    # Default epsilon value
