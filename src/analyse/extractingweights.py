@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     all_embs = {}
 
-    all_embs['W'] = model.linear_layer.weight
+    all_embs['W'] = model.linear_layer.weight.detach.cpu()
 
     with torch.no_grad():
         for loader, name in zip([train_dataloader, val_dataloader, test_dataloader], ["train_dataloader", "val_dataloader", "test_dataloader"]):
