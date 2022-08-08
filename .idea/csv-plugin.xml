@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CsvFileAttributes">
+    <option name="attributeMap">
+      <map>
+        <entry key="/src/train/trained_models/precedent/bert/both/88948b7d091f4bf383b3f574d216c40a/outputs.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/both/88948b7d091f4bf383b3f574d216c40a/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/both/b9daed21e3ff4ad58769b4b82e9b6016/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/both/e621d7fd7fcb4535a6b48207e1c03dfd/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/facts/ace854efc2ee4732a222cf30aaca4b04/outputs.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/facts/ace854efc2ee4732a222cf30aaca4b04/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/facts/b5c78e5c1a3c46c3bc725bee281cae51/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/legal_bert/facts/3536370222894602975846a11660d081/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
