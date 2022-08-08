@@ -12,4 +12,5 @@
 #!/src/analyse/outdir
 /src/train/trained_models/*/*/*/*/*
 !/src/train/trained_models/*/*/*/*/results.csv
+!/src/train/trained_models/*/*/*/*/embeddings.pkl
 /src/analyse/outdir

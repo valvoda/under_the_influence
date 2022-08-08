@@ -6,13 +6,14 @@ import numpy as np
 
 class DataPrep:
 
-    def __init__(self, tokenizer_dir, test, log, max_len, batch_size, input):
+    def __init__(self, tokenizer_dir, test, log, max_len, batch_size, input, not_random=False):
         self.tokenized_dir = tokenizer_dir
         self.test = test
         self.log = log
         self.max_len = max_len
         self.batch_size = batch_size
         self.input = input
+        self.not_random = not_random
 
     def make_loader(self, input, mask, labels, claims, train=True):
         labels = torch.tensor(labels)
@@ -104,7 +105,10 @@ class DataPrep:
         self.n_labels = len(train_labels[1])
 
         # Create the DataLoader for our training set
-        train_dataloader = self.make_loader(train_inputs, train_masks, train_labels, claim_train_labels, train=True)
+        if self.not_random:
+            train_dataloader = self.make_loader(train_inputs, train_masks, train_labels, claim_train_labels, train=False)
+        else:
+            train_dataloader = self.make_loader(train_inputs, train_masks, train_labels, claim_train_labels, train=True)
         val_dataloader = self.make_loader(val_inputs, val_masks, val_labels, claim_val_labels, train=False)
         test_dataloader = self.make_loader(test_inputs, test_masks, test_labels, claim_test_labels, train=False)
 

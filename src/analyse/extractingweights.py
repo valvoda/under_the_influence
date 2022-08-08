@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + args.model
     # tokenizer_dir, test, log, max_len, batch_size
-    loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size, args.input)
+    loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size, args.input, not_random=True)
     # loader = TestData(args.batch_size, None)
     train_dataloader, val_dataloader, test_dataloader = loader.load(args.start, args.end)
     model.eval()
