@@ -10,6 +10,7 @@ import glob
 import os
 import argparse
 import numpy as np
+from scipy import stats
 
 def find_newest(path):
     list_of_files = glob.glob(path)
@@ -84,8 +85,10 @@ def baseline_outcome(tokenized_dir, result_path):
                     not_prec.append(data[str(i)]['influence'][j])
                     precedent_marked.append(0)
 
-            corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
-            all_correlations.append(corr)
+            if 1 in precedent_marked:
+                # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+                corr = stats.spearmanr(np.array(data[str(i)]['influence']) * -1, precedent_marked)[0]
+                all_correlations.append(corr)
             # print(np.correlate(precedent_marked, data[str(i)]['influence'])[0])
 
             # print(i, np.average(prec) > np.average(not_prec), np.average(prec), np.average(not_prec))
@@ -97,12 +100,12 @@ def baseline_outcome(tokenized_dir, result_path):
                 else:
                     all_neg.append(1)
 
-        except:
+        except KeyError as e:
             pass
 
-    print('Outcome Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
+    # print('Outcome Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
     print('Outcome Baseline Correlation:', np.average(all_correlations))
-    print('\n')
+    print('')
 
 def baseline_art(tokenized_dir, result_path):
     train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
@@ -143,7 +146,8 @@ def baseline_art(tokenized_dir, result_path):
                             precedent_marked.append(0)
 
                 if len(precedent_marked) > 0:
-                    corr = np.correlate(np.array(data[str(test_case)]['influence']) * -1, precedent_marked)[0]
+                    # corr = np.correlate(np.array(data[str(test_case)]['influence']) * -1, precedent_marked)[0]
+                    corr = stats.spearmanr(np.array(data[str(test_case)]['influence']) * -1, precedent_marked)[0]
                     all_correlations[art].append(corr)
 
                 # print(art, i, np.average(prec[art]) > np.average(not_prec[art]), np.average(prec[art]), np.average(not_prec[art]))
@@ -154,15 +158,17 @@ def baseline_art(tokenized_dir, result_path):
                         all_pos[art].append(1)
                     else:
                         all_neg[art].append(1)
-        except:
+
+        except KeyError as e:
             pass
 
+    print("Article Baseline Correlation:")
     for art in range(14):
         if len(all_pos[art]) == 0 and len(all_neg[art]) == 0:
-            print(f'Per Article {art} Baseline Accuracy:', 0.0, f'{len(all_pos[art])}/{len(all_neg[art])}')
+            # print(f'Per Article {art} Baseline Accuracy:', 0.0, f'{len(all_pos[art])}/{len(all_neg[art])}')
             print(f'{art} Correlation:', 'NaN')
         else:
-            print(f'Per Article {art} Baseline Accuracy:', len(all_pos[art])/(len(all_pos[art])+len(all_neg[art])), f'{len(all_pos[art])}/{len(all_pos[art])+len(all_neg[art])}')
+            # print(f'Per Article {art} Baseline Accuracy:', len(all_pos[art])/(len(all_pos[art])+len(all_neg[art])), f'{len(all_pos[art])}/{len(all_pos[art])+len(all_neg[art])}')
             print(f'{art} Correlation:', np.average(all_correlations[art]))
 
 def baseline_avg(tokenized_dir, result_path):
@@ -203,7 +209,9 @@ def baseline_avg(tokenized_dir, result_path):
                     prec.append(data[str(i)]['influence'][j])
                     precedent_marked.append(1)
 
-            corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+
+            # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+            corr = stats.spearmanr(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
             all_correlations.append(corr)
 
             if np.average(prec) < np.average(not_prec):
@@ -216,12 +224,12 @@ def baseline_avg(tokenized_dir, result_path):
             # print(i, np.average(prec) > np.average(not_prec), np.average(prec), np.average(not_prec))
             data[str(i)]['avg_baseline'] = [case_baseline, np.average(prec), np.average(not_prec)]
 
-        except:
+        except KeyError as e:
             pass
 
-    print('Avg Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
-    print('Avg Baseline Correlation:', np.average(all_correlations))
-    print('\n')
+    # print('Avg Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
+    print('Precedent Baseline Correlation:', np.average(all_correlations))
+    print('')
     # with open(result_path+'_test.json', 'w') as jsonFile:
     #     json.dump(data, jsonFile, indent=4)
 
