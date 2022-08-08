@@ -60,7 +60,7 @@ if __name__ == '__main__':
                 b_attn_mask = b_attn_mask.squeeze(1)
                 outputs = model.model(input_ids=b_input_ids, attention_mask=b_attn_mask)
                 emb = outputs.last_hidden_state[:, 0, :]
-                loader_embs.append(emb)
+                loader_embs.append(emb.detach().cpu())
             all_embs[name] = torch.cat(loader_embs, dim=0)
 
     with open(model_path + "/embeddings.pkl", "wb") as f:
