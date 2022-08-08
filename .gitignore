@@ -9,6 +9,7 @@
 /datasets/*/precedent.zip
 !/datasets/precedent/bert/Archive.zip
 !/datasets/precedent/legal_bert/Archive.zip
-!/src/analyse/outdir
+#!/src/analyse/outdir
 /src/train/trained_models/*/*/*/*/*
 !/src/train/trained_models/*/*/*/*/results.csv
+/src/analyse/outdir
