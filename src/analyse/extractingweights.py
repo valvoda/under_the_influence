@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default="bert", required=False)
     parser.add_argument("--start", type=int, default=0, required=False)
     parser.add_argument("--end", type=int, default=10000, required=False)
-    parser.add_argument("--path", type=str, default="b5c78e5c1a3c46c3bc725bee281cae51", required=False)
+    parser.add_argument("--path", type=str, default="927927e50ca941ceb7a0b09b51fe54fb", required=False) # mlp: ace854efc2ee4732a222cf30aaca4b04 linear layer only: b5c78e5c1a3c46c3bc725bee281cae51
     args = parser.parse_args()
 
     print(args)
@@ -49,7 +49,9 @@ if __name__ == '__main__':
 
     all_embs = {}
 
-    all_embs['W'] = model.linear_layer.weight.detach().cpu()
+    # all_embs['W'] = model.linear_layer.weight.detach().cpu()
+    all_embs['W1'] = model.mlp[0].weight.detach().cpu()
+    all_embs['W2'] = model.mlp[3].weight.detach().cpu()
 
     with torch.no_grad():
         for loader, name in zip([train_dataloader, val_dataloader, test_dataloader], ["train_dataloader", "val_dataloader", "test_dataloader"]):
