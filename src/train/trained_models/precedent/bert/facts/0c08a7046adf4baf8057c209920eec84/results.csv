@@ -1,0 +1,2 @@
+batch_size,dataset,dropout,epochs,input,learning_rate,max_len,model,n_hidden,out_dim,test,val_accuracy,val_f1,val_precision,val_recall,val_loss,test_accuracy,test_f1,test_precision,test_recall,test_loss
+16,precedent,0.2,10,facts,3e-05,512,bert,50,14,False,43.141592920353986,62.939958592132506,69.56521739130434,57.46691871455577,0.15332049889522686,46.33077765607886,64.22680412371135,72.2737819025522,57.7922077922078,0.15864313509443712
