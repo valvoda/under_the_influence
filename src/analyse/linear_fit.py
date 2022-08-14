@@ -76,7 +76,6 @@ class LinearFit:
 
     def train(self):
 
-        iter = 0
         for e in range(int(self.epochs)):
             # print("Epoch: ", e)
             self.optimizer.zero_grad()
@@ -90,6 +89,7 @@ class LinearFit:
                 in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
                 outputs = self.model(in_inf)
                 in_lab = labels.float().to(self.device)
+                self.optimizer.zero_grad()
                 loss = self.criterion(outputs.squeeze(1), in_lab)
                 epoch_loss.append(loss.detach().to('cpu'))
                 loss.backward()
@@ -108,7 +108,7 @@ class LinearFit:
                     in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
                     outputs = self.model(in_inf)
                     # print(outputs)
-                    predicted = outputs.reshape(-1).detach().numpy().round()
+                    predicted = outputs.reshape(-1).to('cpu').detach().numpy().round()
                     total += labels.size(0)
 
                     correct += (predicted == np.array(labels)).sum()
