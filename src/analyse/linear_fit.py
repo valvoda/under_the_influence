@@ -102,7 +102,7 @@ class LinearFit:
                         _, predicted = torch.max(outputs.data, 1)
                         total += labels.size(0)
 
-                        correct += (predicted == labels).sum()
+                        correct += (predicted.detach().to('cpu') == labels).sum()
                         all_predicted += predicted.detach().to('cpu').tolist()
                         all_labels += labels.detach().to('cpu').tolist()
                     accuracy = 100 * correct / total
