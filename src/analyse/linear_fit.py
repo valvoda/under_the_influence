@@ -81,8 +81,10 @@ class LinearFit:
             self.model.train()
 
             for i, (influence, labels) in enumerate(self.train_loader):
-                outputs = self.model(influence.unsqueeze(0).transpose(0, 1).to(self.device))
-                loss = self.criterion(outputs.squeeze(1), labels.float().to(self.device))
+                in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                outputs = self.model(in_inf)
+                in_lab = labels.float().to(self.device)
+                loss = self.criterion(outputs.squeeze(1), in_lab)
                 loss.backward()
                 self.optimizer.step()
 
@@ -94,14 +96,15 @@ class LinearFit:
                     all_predicted = []
                     all_labels = []
                     for influence, labels in self.test_loader:
-                        outputs = self.model(influence.unsqueeze(0).transpose(0, 1))
+                        in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                        outputs = self.model(in_inf)
                         # print(outputs)
                         _, predicted = torch.max(outputs.data, 1)
                         total += labels.size(0)
 
                         correct += (predicted == labels).sum()
-                        all_predicted += predicted.detach().tolist()
-                        all_labels += labels.detach().tolist()
+                        all_predicted += predicted.detach().to('cpu').tolist()
+                        all_labels += labels.detach().to('cpu').tolist()
                     accuracy = 100 * correct / total
                     f1 = f1_score(all_labels, all_predicted)
                     print("Iteration: {}. Loss: {}. Accuracy: {}. F1: {}.".format(iter, loss.item(), accuracy, f1))
