@@ -89,7 +89,7 @@ class LinearFit:
                 self.optimizer.step()
 
                 iter += 1
-                if iter % 500 == 0:
+                if iter % 5000 == 0:
                     # calculate Accuracy
                     correct = 0
                     total = 0
