@@ -326,7 +326,19 @@ def baseline_avg(tokenized_dir, result_path):
     # with open(result_path+'_test.json', 'w') as jsonFile:
     #     json.dump(data, jsonFile, indent=4)
 
+
+def set_cuda():
+    if torch.cuda.is_available():
+        print(f'There are {torch.cuda.device_count()} GPU(s) available.')
+        return torch.device("cuda")
+    else:
+        print('No GPU available, using the CPU instead.')
+        return torch.device("cpu")
+
 def baseline_linear(tokenized_dir, result_path, negative=False, classifier=None, loss_fn=None):
+
+    device = set_cuda()
+    classifier.to(device)
 
     train_ids, test_ids, test_precedent, train_outcomes, test_outcomes, train_claims, test_claims = initialise_data(tokenized_dir)
 
@@ -414,7 +426,9 @@ def baseline_linear(tokenized_dir, result_path, negative=False, classifier=None,
         except KeyError as e:
             pass
 
-    accuracy = all_preds == all_truths
+    accuracy = (np.array(all_preds) == np.array(all_truths)).mean()
+    print("Accuracy:", accuracy)
+    print("Majority Baseline:", (np.array(all_truths)==[0.0]).mean())
 
     # print('Outcome Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
     if negative:
