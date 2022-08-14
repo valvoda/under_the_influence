@@ -7,6 +7,7 @@ from baselines import baseline_linear
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score
+import argparse
 
 class LogisticRegression(torch.nn.Module):
      def __init__(self, input_dim, output_dim):
@@ -109,7 +110,13 @@ class LinearFit:
 
 if __name__ == '__main__':
 
-    classifier = LinearFit(batch_size=256, lr=0.01, epochs=10)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch_size", type=int, default=256, required=False)
+    parser.add_argument("--lr", type=float, default=0.01, required=False)
+    parser.add_argument("--epochs", type=int, default=10, required=False)
+    args = parser.parse_args()
+    print(args)
+    classifier = LinearFit(batch_size=args.batch_size, lr=args.lr, epochs=args.epochs)
     classifier.majority_baseline()
     classifier.train()
     print('done')
