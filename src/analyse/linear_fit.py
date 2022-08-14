@@ -108,12 +108,12 @@ class LinearFit:
                     in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
                     outputs = self.model(in_inf)
                     # print(outputs)
-                    _, predicted = torch.max(outputs.data, 1)
+                    predicted = outputs.reshape(-1).detach().numpy().round()
                     total += labels.size(0)
 
-                    correct += (predicted.detach().to('cpu') == labels).sum()
-                    all_predicted += predicted.detach().to('cpu').tolist()
-                    all_labels += labels.detach().to('cpu').tolist()
+                    correct += (predicted == np.array(labels)).sum()
+                    all_predicted += predicted
+                    all_labels += labels
                 accuracy = 100 * correct / total
                 f1 = f1_score(all_labels, all_predicted)
                 print("Epoch: {}. Train Loss: {}. Test Accuracy: {}. F1: {}.".format(e, np.array(epoch_loss).mean(), accuracy, f1))
