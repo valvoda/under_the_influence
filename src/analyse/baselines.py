@@ -11,6 +11,10 @@ import os
 import argparse
 import numpy as np
 from scipy import stats
+import math
+import torch
+import torch.nn as nn
+from tqdm import tqdm
 
 def find_newest(path):
     list_of_files = glob.glob(path)
@@ -47,10 +51,13 @@ def initialise_data(tokenized_dir):
         test_facts, test_masks, test_arguments, \
         test_masks_arguments, test_ids, test_claims, test_outcomes, test_precedent, _ = pickle.load(f)
 
-    return train_ids, test_ids, test_precedent, train_outcomes
+    return train_ids, test_ids, test_precedent, train_outcomes, test_outcomes, train_claims, test_claims
 
-def baseline_outcome(tokenized_dir, result_path):
-    train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
+def baseline_outcome(tokenized_dir, result_path, negative=False):
+    train_ids, test_ids, test_precedent, train_outcomes, test_outcomes, train_claims, test_claims = initialise_data(tokenized_dir)
+
+    negative_precedent = train_claims - train_outcomes
+    negative_outcomes = test_claims - test_outcomes
 
     test_precedent = numerize_precedent(train_ids, test_precedent)
     l_dic = label_dic(train_outcomes)
@@ -78,7 +85,12 @@ def baseline_outcome(tokenized_dir, result_path):
             not_prec = []
             for j in range(len(l_dic)):
                 # print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
-                if list(l_dic[j]) == data[str(i)]['label']:
+                if negative:
+                    flag = list(negative_precedent[j]) == list(negative_outcomes[i])
+                else:
+                    flag = list(l_dic[j]) == data[str(i)]['label']
+
+                if flag:
                     prec.append(data[str(i)]['influence'][j])
                     precedent_marked.append(1)
                 else:
@@ -104,11 +116,14 @@ def baseline_outcome(tokenized_dir, result_path):
             pass
 
     # print('Outcome Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
-    print('Outcome Baseline Correlation:', np.average(all_correlations))
+    if negative:
+        print('Neg. Outcome Baseline Correlation:', np.average(all_correlations))
+    else:
+        print('Pos. Outcome Baseline Correlation:', np.average(all_correlations))
     print('')
 
 def baseline_art(tokenized_dir, result_path):
-    train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
+    train_ids, test_ids, test_precedent, train_outcomes, _, _, _ = initialise_data(tokenized_dir)
 
     test_precedent = numerize_precedent(train_ids, test_precedent)
     l_dic = label_dic(train_outcomes)
@@ -171,8 +186,86 @@ def baseline_art(tokenized_dir, result_path):
             # print(f'Per Article {art} Baseline Accuracy:', len(all_pos[art])/(len(all_pos[art])+len(all_neg[art])), f'{len(all_pos[art])}/{len(all_pos[art])+len(all_neg[art])}')
             print(f'{art} Correlation:', np.average(all_correlations[art]))
 
+def baseline_applied(tokenized_dir, result_path):
+    train_ids, test_ids, test_precedent, train_outcomes, _, _, _ = initialise_data(tokenized_dir)
+
+    test_precedent = numerize_precedent(train_ids, test_precedent)
+    l_dic = label_dic(train_outcomes)
+
+    # result_path = './outdir/*'
+    # result_path = find_newest(result_path)
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
+
+    print(result_path)
+
+    with open(result_path, 'r') as jsonFile:
+        data = json.load(jsonFile)
+
+    applied_correlations = []
+    distinguished_correlations = []
+    all_pos = []
+    all_neg = []
+    for i in range(len(test_ids)):
+        try:
+            applied_marked = []
+            distinguished_marked = []
+
+            data[str(i)]['true'] = list(set(test_precedent[i]))
+            data[str(i)]['id'] = test_ids[i]
+
+            prec = []
+            not_prec = []
+            # for t in data[str(i)]['true']:
+            #     prec.append(data[str(i)]['influence'][t])
+
+            for j in range(len(data[str(i)]['influence'])):
+                if j not in data[str(i)]['true']:
+                    not_prec.append(data[str(i)]['influence'][j])
+                    applied_marked.append(0)
+                    distinguished_marked.append(0)
+                else:
+                    prec.append(data[str(i)]['influence'][j])
+                    if list(l_dic[j]) == data[str(i)]['label']:
+                        applied_marked.append(1)
+                        distinguished_marked.append(0)
+                    else:
+                        distinguished_marked.append(1)
+                        applied_marked.append(0)
+
+
+            # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+            corr_app = stats.spearmanr(np.array(data[str(i)]['influence'])*-1, applied_marked)[0]
+            if not math.isnan(corr_app):
+                # print('app', corr_app)
+                applied_correlations.append(corr_app)
+
+            corr_neg = stats.spearmanr(np.array(data[str(i)]['influence']) * -1, distinguished_marked)[0]
+            if not math.isnan(corr_neg):
+                # print('dis', corr_neg)
+                distinguished_correlations.append(corr_neg)
+
+            if np.average(prec) < np.average(not_prec):
+                all_pos.append(1)
+                case_baseline = 1
+            else:
+                all_neg.append(1)
+                case_baseline = -1
+
+            # print(i, np.average(prec) > np.average(not_prec), np.average(prec), np.average(not_prec))
+            data[str(i)]['avg_baseline'] = [case_baseline, np.average(prec), np.average(not_prec)]
+
+        except KeyError as e:
+            pass
+
+    # print('Avg Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
+    print('Applied Precedent Baseline Correlation:', np.average(applied_correlations))
+    print('Distinguished Precedent Baseline Correlation:', np.average(distinguished_correlations))
+    print('')
+    # with open(result_path+'_test.json', 'w') as jsonFile:
+    #     json.dump(data, jsonFile, indent=4)
+
 def baseline_avg(tokenized_dir, result_path):
-    train_ids, test_ids, test_precedent, train_outcomes = initialise_data(tokenized_dir)
+    train_ids, test_ids, test_precedent, train_outcomes, _, _, _ = initialise_data(tokenized_dir)
 
     test_precedent = numerize_precedent(train_ids, test_precedent)
     l_dic = label_dic(train_outcomes)
@@ -233,6 +326,104 @@ def baseline_avg(tokenized_dir, result_path):
     # with open(result_path+'_test.json', 'w') as jsonFile:
     #     json.dump(data, jsonFile, indent=4)
 
+def baseline_linear(tokenized_dir, result_path, negative=False, classifier=None, loss_fn=None):
+
+    train_ids, test_ids, test_precedent, train_outcomes, test_outcomes, train_claims, test_claims = initialise_data(tokenized_dir)
+
+    negative_precedent = train_claims - train_outcomes
+    negative_outcomes = test_claims - test_outcomes
+
+    test_precedent = numerize_precedent(train_ids, test_precedent)
+    l_dic = label_dic(train_outcomes)
+
+    # result_path = './outdir/*'
+    # result_path = find_newest(result_path)
+    # result_path = './outdir/influence_results_tmp_0_False_last-i_294.json'
+    # print(result_path)
+
+    with open(result_path, 'r') as jsonFile:
+        data = json.load(jsonFile)
+
+    all_pos = []
+    all_neg = []
+    all_correlations = []
+
+    all_preds = []
+    all_truths = []
+
+    test_start = len(data) - 50
+
+    for i in tqdm(range(len(data))):
+        try:
+            precedent_marked = []
+
+            data[str(i)]['true'] = list(set(test_precedent[i]))
+            data[str(i)]['id'] = test_ids[i]
+
+            prec = []
+            not_prec = []
+            for j in range(len(l_dic)):
+
+                # print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
+                if negative:
+                    flag = list(negative_precedent[j]) == list(negative_outcomes[i])
+                else:
+                    flag = list(l_dic[j]) == data[str(i)]['label']
+
+                truth = []
+                if flag:
+                    prec.append(data[str(i)]['influence'][j])
+                    precedent_marked.append(1)
+                    truth = [1]
+                else:
+                    not_prec.append(data[str(i)]['influence'][j])
+                    precedent_marked.append(0)
+                    truth = [0]
+
+                if i >= test_start:
+                    classifier.eval()
+                    with torch.no_grad():
+                        logits = classifier(torch.tensor([data[str(i)]['influence'][j]]))
+                        preds = torch.round(torch.sigmoid(logits))
+                        all_preds.append(preds)
+                        all_truths.append(torch.tensor(truth).float())
+
+                else:
+                    classifier.train()
+                    logits = classifier(torch.tensor([data[str(i)]['influence'][j]]))
+                    # print(preds == torch.tensor(truth).float())
+                    loss = loss_fn(logits, torch.tensor(truth).float())
+                    loss = torch.mean(loss)
+                    loss.backward()
+
+            if 1 in precedent_marked:
+                # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+                corr = stats.spearmanr(np.array(data[str(i)]['influence']) * -1, precedent_marked)[0]
+                all_correlations.append(corr)
+            # print(np.correlate(precedent_marked, data[str(i)]['influence'])[0])
+
+            # print(i, np.average(prec) > np.average(not_prec), np.average(prec), np.average(not_prec))
+            # data[str(i)]['outcome_baseline'] = [np.average(prec), np.average(not_prec)]
+            if len(prec) > 0 and len(not_prec) > 0:
+                data[str(i)]['outcome_baseline'] = [np.average(prec), np.average(not_prec)]
+                if np.average(prec) < np.average(not_prec):
+                    all_pos.append(1)
+                else:
+                    all_neg.append(1)
+
+        except KeyError as e:
+            pass
+
+    accuracy = all_preds == all_truths
+
+    # print('Outcome Baseline Accuracy:', len(all_pos)/(len(all_pos)+len(all_neg)), f'{len(all_pos)}/{len(all_pos)+len(all_neg)}')
+    if negative:
+        print('Neg. Outcome Baseline Correlation:', np.average(all_correlations))
+    else:
+        print('Pos. Outcome Baseline Correlation:', np.average(all_correlations))
+    print('')
+
+
 if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
@@ -240,6 +431,15 @@ if __name__ == '__main__':
     result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
     # result_path = './outdir/bert/both/987cd7bdc92b42afab32772c509aa246_0_10000_0_False_last-i_291.json'
 
-    baseline_avg(tokenized_dir, result_path)
-    baseline_outcome(tokenized_dir, result_path)
-    baseline_art(tokenized_dir, result_path)
+    D_in, D_out = 1, 1
+    classifier = nn.Linear(D_in, D_out)
+    loss_fn = nn.BCEWithLogitsLoss(reduction='none')
+
+    baseline_linear(tokenized_dir, result_path, classifier=classifier, loss_fn=loss_fn)
+
+
+    # baseline_applied(tokenized_dir, result_path)
+    # baseline_avg(tokenized_dir, result_path)
+    # baseline_outcome(tokenized_dir, result_path)
+    # baseline_outcome(tokenized_dir, result_path, True)
+    # baseline_art(tokenized_dir, result_path)
