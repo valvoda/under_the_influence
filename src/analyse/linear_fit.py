@@ -31,7 +31,8 @@ class LinearFit:
         self.lr = lr
         self.model = LogisticRegression(D_in, D_out).to(self.device)
         self.criterion = nn.BCELoss()
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr)
+        # self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr)
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr)
         self.set_seed()
         self.train_loader = None
         self.test_loader = None
@@ -49,6 +50,8 @@ class LinearFit:
 
         self.X_test = X_test
         self.y_test = y_test
+        self.X_train = X_train
+        self.y_train = y_train
 
         self.train_loader = torch.utils.data.DataLoader(dataset=TensorDataset(X_train, y_train), batch_size=batch_size,
                                                    shuffle=True)
@@ -74,8 +77,8 @@ class LinearFit:
     def train(self):
 
         iter = 0
-        for _ in range(int(self.epochs)):
-
+        for e in range(int(self.epochs)):
+            print("Epoch: ", e)
             self.optimizer.zero_grad()
             self.model.zero_grad()
             self.model.train()
@@ -107,21 +110,72 @@ class LinearFit:
                         all_labels += labels.detach().to('cpu').tolist()
                     accuracy = 100 * correct / total
                     f1 = f1_score(all_labels, all_predicted)
-                    print("Iteration: {}. Loss: {}. Accuracy: {}. F1: {}.".format(iter, loss.item(), accuracy, f1))
+                    print("Iteration: {}. Train Loss: {}. Test Accuracy: {}. F1: {}.".format(iter, loss.item(), accuracy, f1))
 
     def majority_baseline(self):
         labels = [0.0 for _ in self.y_test]
         print("Majority Baseline: Acc: {}. F1 {}.".format(100 *(np.array(self.y_test) == 0.0).mean(), f1_score(labels, self.y_test)))
 
+    def linear_search(self):
+        x = np.array(self.X_train.tolist())
+        y = np.array(self.y_train.tolist())
+
+        x, y = zip(*sorted(zip(x, y)))
+
+        best_acc = 0
+        best_boundary = None
+
+        majority_acc = 100 * (np.array(y) == 0.0).mean()
+        print("Test Majority Baseline: ", majority_acc)
+
+        # for z in set(x):
+        #     preds = []
+        #     for i, j in zip(x, y):
+        #         # predict 1 for each case with lower than z boundary
+        #         if i <= z:
+        #             preds.append(1)
+        #         else:
+        #             preds.append(0)
+        #
+        #     acc = 100 * (y == np.array(preds)).mean()
+        #     if best_acc < acc:
+        #         best_acc = acc
+        #         best_boundary = z
+        #         print("Boundary: ", z, "Accuracy: ", acc)
+        #
+        # print("Best Train: ", best_acc, best_boundary)
+        #
+        # x = np.array(self.X_test.tolist())
+        # y = np.array(self.y_test.tolist())
+        #
+        # x, y = zip(*sorted(zip(x, y)))
+        #
+        # majority_acc = 100 * (np.array(y) == 0.0).mean()
+        # print("Train Majority Baseline: ", majority_acc)
+
+        best_boundary = -0.005241513252258301
+        preds = []
+        for i, j in zip(x, y):
+            # predict 1 for each case with lower than z boundary
+            if i <= best_boundary:
+                preds.append(1)
+            else:
+                preds.append(0)
+
+        acc = 100 * (y == np.array(preds)).mean()
+
+        print("Best Test: ", acc, best_boundary)
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=256, required=False)
-    parser.add_argument("--lr", type=float, default=0.01, required=False)
+    parser.add_argument("--lr", type=float, default=0.0001, required=False)
     parser.add_argument("--epochs", type=int, default=10, required=False)
     args = parser.parse_args()
     print(args)
     classifier = LinearFit(batch_size=args.batch_size, lr=args.lr, epochs=args.epochs)
     classifier.majority_baseline()
+    # classifier.linear_search()
     classifier.train()
-    print('done')
+    # print('done')
