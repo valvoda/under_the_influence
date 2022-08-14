@@ -404,7 +404,7 @@ def baseline_linear(tokenized_dir, result_path, negative=False, classifier=None,
                     classifier.train()
                     logits = classifier(torch.tensor([data[str(i)]['influence'][j]]).to(device))
                     # print(preds == torch.tensor(truth).float())
-                    loss = loss_fn(logits, torch.tensor(truth).float())
+                    loss = loss_fn(logits, torch.tensor(truth).float().to(device))
                     loss = torch.mean(loss)
                     loss.backward()
 
