@@ -112,7 +112,7 @@ class LinearFit:
                     total += labels.size(0)
 
                     correct += (predicted == np.array(labels)).sum()
-                    all_predicted += predicted
+                    all_predicted += list(predicted)
                     all_labels += labels
                 accuracy = 100 * correct / total
                 f1 = f1_score(all_labels, all_predicted)
