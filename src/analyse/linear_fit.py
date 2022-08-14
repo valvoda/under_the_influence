@@ -86,7 +86,8 @@ class LinearFit:
             epoch_loss = []
 
             for i, (influence, labels) in enumerate(self.train_loader):
-                in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                # in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
                 outputs = self.model(in_inf)
                 in_lab = labels.float().to(self.device)
                 loss = self.criterion(outputs.squeeze(1), in_lab)
@@ -100,19 +101,22 @@ class LinearFit:
             all_predicted = []
             all_labels = []
 
-            for influence, labels in self.test_loader:
-                in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
-                outputs = self.model(in_inf)
-                # print(outputs)
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
+            self.model.eval()
+            with torch.no_grad():
+                for influence, labels in self.test_loader:
+                    # in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                    in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
+                    outputs = self.model(in_inf)
+                    # print(outputs)
+                    _, predicted = torch.max(outputs.data, 1)
+                    total += labels.size(0)
 
-                correct += (predicted.detach().to('cpu') == labels).sum()
-                all_predicted += predicted.detach().to('cpu').tolist()
-                all_labels += labels.detach().to('cpu').tolist()
-            accuracy = 100 * correct / total
-            f1 = f1_score(all_labels, all_predicted)
-            print("Epoch: {}. Train Loss: {}. Test Accuracy: {}. F1: {}.".format(e, np.array(epoch_loss).mean(), accuracy, f1))
+                    correct += (predicted.detach().to('cpu') == labels).sum()
+                    all_predicted += predicted.detach().to('cpu').tolist()
+                    all_labels += labels.detach().to('cpu').tolist()
+                accuracy = 100 * correct / total
+                f1 = f1_score(all_labels, all_predicted)
+                print("Epoch: {}. Train Loss: {}. Test Accuracy: {}. F1: {}.".format(e, np.array(epoch_loss).mean(), accuracy, f1))
 
     def majority_baseline(self):
         labels = [0.0 for _ in self.y_test]
@@ -128,7 +132,7 @@ class LinearFit:
         best_boundary = None
 
         majority_acc = 100 * (np.array(y) == 0.0).mean()
-        print("Test Majority Baseline: ", majority_acc)
+        print("Train Majority Baseline: ", majority_acc)
 
         # for z in set(x):
         #     preds = []
@@ -146,14 +150,14 @@ class LinearFit:
         #         print("Boundary: ", z, "Accuracy: ", acc)
         #
         # print("Best Train: ", best_acc, best_boundary)
-        #
-        # x = np.array(self.X_test.tolist())
-        # y = np.array(self.y_test.tolist())
-        #
-        # x, y = zip(*sorted(zip(x, y)))
-        #
-        # majority_acc = 100 * (np.array(y) == 0.0).mean()
-        # print("Train Majority Baseline: ", majority_acc)
+
+        x = np.array(self.X_test.tolist())
+        y = np.array(self.y_test.tolist())
+
+        x, y = zip(*sorted(zip(x, y)))
+
+        majority_acc = 100 * (np.array(y) == 0.0).mean()
+        print("Test Majority Baseline: ", majority_acc)
 
         best_boundary = -0.005241513252258301
         preds = []
