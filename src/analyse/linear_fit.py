@@ -85,8 +85,8 @@ class LinearFit:
             epoch_loss = []
 
             for i, (influence, labels) in enumerate(self.train_loader):
-                # in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
-                in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
+                in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                # in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
                 outputs = self.model(in_inf)
                 in_lab = labels.float().to(self.device)
                 self.optimizer.zero_grad()
@@ -104,8 +104,8 @@ class LinearFit:
             self.model.eval()
             with torch.no_grad():
                 for influence, labels in self.test_loader:
-                    # in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
-                    in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
+                    in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                    # in_inf = labels.float().unsqueeze(0).transpose(0, 1).to(self.device)
                     outputs = self.model(in_inf)
                     # print(outputs)
                     predicted = outputs.reshape(-1).to('cpu').detach().numpy().round()
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=256, required=False)
-    parser.add_argument("--lr", type=float, default=0.0001, required=False)
+    parser.add_argument("--lr", type=float, default=0.001, required=False)
     parser.add_argument("--epochs", type=int, default=10, required=False)
     args = parser.parse_args()
     print(args)
