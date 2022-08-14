@@ -83,34 +83,36 @@ class LinearFit:
             self.model.zero_grad()
             self.model.train()
 
+            epoch_loss = []
+
             for i, (influence, labels) in enumerate(self.train_loader):
                 in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
                 outputs = self.model(in_inf)
                 in_lab = labels.float().to(self.device)
                 loss = self.criterion(outputs.squeeze(1), in_lab)
+                epoch_loss.append(loss.detach().to('cpu'))
                 loss.backward()
                 self.optimizer.step()
 
-                iter += 1
-                if iter % 5000 == 0:
-                    # calculate Accuracy
-                    correct = 0
-                    total = 0
-                    all_predicted = []
-                    all_labels = []
-                    for influence, labels in self.test_loader:
-                        in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
-                        outputs = self.model(in_inf)
-                        # print(outputs)
-                        _, predicted = torch.max(outputs.data, 1)
-                        total += labels.size(0)
 
-                        correct += (predicted.detach().to('cpu') == labels).sum()
-                        all_predicted += predicted.detach().to('cpu').tolist()
-                        all_labels += labels.detach().to('cpu').tolist()
-                    accuracy = 100 * correct / total
-                    f1 = f1_score(all_labels, all_predicted)
-                    print("Iteration: {}. Train Loss: {}. Test Accuracy: {}. F1: {}.".format(iter, loss.item(), accuracy, f1))
+            correct = 0
+            total = 0
+            all_predicted = []
+            all_labels = []
+
+            for influence, labels in self.test_loader:
+                in_inf = influence.unsqueeze(0).transpose(0, 1).to(self.device)
+                outputs = self.model(in_inf)
+                # print(outputs)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+
+                correct += (predicted.detach().to('cpu') == labels).sum()
+                all_predicted += predicted.detach().to('cpu').tolist()
+                all_labels += labels.detach().to('cpu').tolist()
+            accuracy = 100 * correct / total
+            f1 = f1_score(all_labels, all_predicted)
+            print("Epoch: {}. Train Loss: {}. Test Accuracy: {}. F1: {}.".format(e, np.array(epoch_loss).mean(), accuracy, f1))
 
     def majority_baseline(self):
         labels = [0.0 for _ in self.y_test]
