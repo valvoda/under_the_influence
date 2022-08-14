@@ -55,6 +55,8 @@ class LinearFit:
         self.test_loader = torch.utils.data.DataLoader(dataset=TensorDataset(X_test, y_test), batch_size=batch_size,
                                                   shuffle=False)
 
+
+
     def set_seed(self, seed_value=42):
         random.seed(seed_value)
         np.random.seed(seed_value)
@@ -79,8 +81,8 @@ class LinearFit:
             self.model.train()
 
             for i, (influence, labels) in enumerate(self.train_loader):
-                outputs = self.model(influence.unsqueeze(0).transpose(0, 1))
-                loss = self.criterion(outputs.squeeze(1), labels.float())
+                outputs = self.model(influence.unsqueeze(0).transpose(0, 1).to(self.device))
+                loss = self.criterion(outputs.squeeze(1), labels.float().to(self.device))
                 loss.backward()
                 self.optimizer.step()
 
