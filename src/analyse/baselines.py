@@ -395,14 +395,14 @@ def baseline_linear(tokenized_dir, result_path, negative=False, classifier=None,
                 if i >= test_start:
                     classifier.eval()
                     with torch.no_grad():
-                        logits = classifier(torch.tensor([data[str(i)]['influence'][j]]))
+                        logits = classifier(torch.tensor([data[str(i)]['influence'][j]]).to(device))
                         preds = torch.round(torch.sigmoid(logits))
                         all_preds.append(preds)
                         all_truths.append(torch.tensor(truth).float())
 
                 else:
                     classifier.train()
-                    logits = classifier(torch.tensor([data[str(i)]['influence'][j]]))
+                    logits = classifier(torch.tensor([data[str(i)]['influence'][j]]).to(device))
                     # print(preds == torch.tensor(truth).float())
                     loss = loss_fn(logits, torch.tensor(truth).float())
                     loss = torch.mean(loss)
