@@ -78,7 +78,7 @@ class LinearFit:
 
         iter = 0
         for e in range(int(self.epochs)):
-            print("Epoch: ", e)
+            # print("Epoch: ", e)
             self.optimizer.zero_grad()
             self.model.zero_grad()
             self.model.train()
