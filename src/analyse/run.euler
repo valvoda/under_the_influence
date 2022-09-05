@@ -18,4 +18,4 @@ bsub -W $TIME \
      -R "select[gpu_mtotal0>=30000]" \
      "source ~/.bashrc; \
      conda activate law; \
-     python influence.py --start ${START} --end ${END}"
+     python influence.py --start ${START} --end ${END} --model legal_bert"

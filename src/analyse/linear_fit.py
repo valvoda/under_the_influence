@@ -42,7 +42,8 @@ class LinearFit:
 
     def get_data(self):
         tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
-        result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
+        result_path = './outdir/bert/facts/927927e50ca941ceb7a0b09b51fe54fb_750_1000_0_False_last-i_137.json'
+        # result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
         batch_size = self.batch_size
         all_influences, all_labels = baseline_linear(tokenized_dir, result_path)
         X_train, X_test, y_train, y_test = train_test_split(torch.tensor(all_influences).flatten(0), torch.tensor(all_labels).flatten(0),
@@ -122,55 +123,65 @@ class LinearFit:
         labels = [0.0 for _ in self.y_test]
         print("Majority Baseline: Acc: {}. F1 {}.".format(100 *(np.array(self.y_test) == 0.0).mean(), f1_score(labels, self.y_test)))
 
-    def linear_search(self):
-        x = np.array(self.X_train.tolist())
-        y = np.array(self.y_train.tolist())
+    def linear_search(self, random=False):
 
-        x, y = zip(*sorted(zip(x, y)))
+        infs = np.array([-float(x) for x in self.X_train.tolist()])
+        precs = np.array(self.y_train.tolist())
 
-        best_acc = 0
-        best_boundary = None
+        both = sorted(zip(infs, precs), key=lambda x: x[0])
 
-        majority_acc = 100 * (np.array(y) == 0.0).mean()
-        print("Train Majority Baseline: ", majority_acc)
+        if random:
+            np.random.shuffle(both)
 
-        # for z in set(x):
-        #     preds = []
-        #     for i, j in zip(x, y):
-        #         # predict 1 for each case with lower than z boundary
-        #         if i <= z:
-        #             preds.append(1)
-        #         else:
-        #             preds.append(0)
-        #
-        #     acc = 100 * (y == np.array(preds)).mean()
-        #     if best_acc < acc:
-        #         best_acc = acc
-        #         best_boundary = z
-        #         print("Boundary: ", z, "Accuracy: ", acc)
-        #
-        # print("Best Train: ", best_acc, best_boundary)
+        # initialization
+        Np, p = 0, 0
+        Nr, r = 0, 0
+        Np = len(precs)
+        for prec in precs:
+            if prec == 1:
+                p += 1
+        r = p
+        Nr = p
 
-        x = np.array(self.X_test.tolist())
-        y = np.array(self.y_test.tolist())
+        def f1(p, Np, r, Nr):
+            precision = 0
+            if int(Np) != 0:
+                precision = float(p) / Np
+            recall = 0
+            if int(Nr) != 0:
+                recall = float(r) / Nr
+            if int(r) == 0:  # hack for fast
+                precision = 1
 
-        x, y = zip(*sorted(zip(x, y)))
+            return precision, recall, 2 * precision * recall / (precision + recall)
 
-        majority_acc = 100 * (np.array(y) == 0.0).mean()
-        print("Test Majority Baseline: ", majority_acc)
+        max_F1 = 0.0
+        max_acc = 0.0
+        max_precision = 0.0
+        max_recall = 0.0
 
-        best_boundary = -0.005241513252258301
-        preds = []
-        for i, j in zip(x, y):
-            # predict 1 for each case with lower than z boundary
-            if i <= best_boundary:
-                preds.append(1)
-            else:
-                preds.append(0)
+        for i, (inf, prec) in enumerate(both):
+            # take prec to be the new boundary
+            if prec == 1:
+                p -= 1
+                r -= 1
 
-        acc = 100 * (y == np.array(preds)).mean()
+            Np -= 1
 
-        print("Best Test: ", acc, best_boundary)
+            precision, recall, new_f1 = f1(p, Np, r, Nr)
+            new_acc = p / float(len(precs))
+            # print(1.0-new_acc)
+            if new_acc > max_acc:
+                # print("\t".join(map(str, [i, 1.0 - new_acc])))
+                # print('Best acc: ', 1.0-new_acc)
+                max_acc = new_acc
+
+            if new_f1 > max_F1:
+                max_F1 = new_f1
+                # print("\t".join(map(str, [i, inf, precision, recall, new_f1])))
+
+        return max_F1, max_acc, max_recall, max_precision
+
 
 if __name__ == '__main__':
 
@@ -181,7 +192,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
     classifier = LinearFit(batch_size=args.batch_size, lr=args.lr, epochs=args.epochs)
-    classifier.majority_baseline()
-    # classifier.linear_search()
-    classifier.train()
+    # classifier.majority_baseline()
+    print('influences:', classifier.linear_search(random=False))
+    for i in range(100):
+        print(f'{i} random {classifier.linear_search(random=True)}')
+    # classifier.train()
     # print('done')

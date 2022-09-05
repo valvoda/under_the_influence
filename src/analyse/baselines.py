@@ -1,19 +1,13 @@
 import sys
 sys.path.append("../../")
 
-import pytorch_influence_functions as ptif
-import torch
-from src.preprocess.data_loader import DataPrep
 import pickle
 import json
 import glob
 import os
-import argparse
 import numpy as np
 from scipy import stats
 import math
-import torch
-import torch.nn as nn
 from tqdm import tqdm
 
 def find_newest(path):
@@ -370,6 +364,7 @@ if __name__ == '__main__':
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
 
     result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
+    # result_path = './outdir/bert/facts/927927e50ca941ceb7a0b09b51fe54fb_0_250_0_False_last-i_249.json'
     # result_path = './outdir/bert/both/987cd7bdc92b42afab32772c509aa246_0_10000_0_False_last-i_291.json'
 
 
