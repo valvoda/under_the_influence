@@ -361,16 +361,14 @@ def baseline_linear(tokenized_dir, result_path):
 
 if __name__ == '__main__':
 
-    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
+    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
 
     result_path = './outdir/legal_bert/facts/f1f984acd35b4283947585cac74ed6bd_0_250_0_False_last-i_203.json'
     # result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
     # result_path = './outdir/bert/facts/927927e50ca941ceb7a0b09b51fe54fb_0_250_0_False_last-i_249.json'
     # result_path = './outdir/bert/both/987cd7bdc92b42afab32772c509aa246_0_10000_0_False_last-i_291.json'
 
-
     # baseline_linear(tokenized_dir, result_path)
-
 
     baseline_applied(tokenized_dir, result_path)
     baseline_avg(tokenized_dir, result_path)
