@@ -1,4 +1,4 @@
-for start in {0..750..250};
+for start in {500..750..250};
 do
   end=$((start+250))
   echo "${start} ${end}"

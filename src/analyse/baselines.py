@@ -39,7 +39,7 @@ def label_dic(train_outcomes):
 def initialise_data(tokenized_dir):
     with open("../" + tokenized_dir + "/tokenized_train.pkl", "rb") as f:
         train_facts, train_masks, train_arguments, \
-        train_masks_arguments, train_ids, train_claims, train_outcomes, train_precedent, _ = pickle.load(f)
+        train_masks_arguments, train_ids, train_claims, train_outcomes, train_precedent, mlb = pickle.load(f)
 
     with open("../" + tokenized_dir + "/tokenized_test.pkl", "rb") as f:
         test_facts, test_masks, test_arguments, \
@@ -171,6 +171,7 @@ def baseline_art(tokenized_dir, result_path):
         except KeyError as e:
             pass
 
+    results = []
     print("Article Baseline Correlation:")
     for art in range(14):
         if len(all_pos[art]) == 0 and len(all_neg[art]) == 0:
@@ -179,6 +180,9 @@ def baseline_art(tokenized_dir, result_path):
         else:
             # print(f'Per Article {art} Baseline Accuracy:', len(all_pos[art])/(len(all_pos[art])+len(all_neg[art])), f'{len(all_pos[art])}/{len(all_pos[art])+len(all_neg[art])}')
             print(f'{art} Correlation:', np.average(all_correlations[art]))
+            results.append(np.average(all_correlations[art]))
+
+    return results
 
 def baseline_applied(tokenized_dir, result_path):
     train_ids, test_ids, test_precedent, train_outcomes, _, _, _ = initialise_data(tokenized_dir)
@@ -359,17 +363,37 @@ def baseline_linear(tokenized_dir, result_path):
 
     return all_influences, all_labels
 
+
+def influence_merge(dir_path):
+    all_influences = []
+
+    for i in range(250, 1250, 250):
+        with open(dir_path + str(i) + ".json", 'r') as jsonFile:
+            all_influences.append(json.load(jsonFile))
+
+    with open(dir_path +'all.json', 'w') as outFile:
+        new_dic = {}
+        cnt = 0
+        for split in all_influences:
+            for case in split:
+                new_dic[str(cnt)] = split[case]
+                cnt += 1
+
+        json.dump(new_dic, outFile, indent=2)
+
 if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
 
-    result_path = './outdir/legal_bert/facts/f1f984acd35b4283947585cac74ed6bd_0_250_0_False_last-i_203.json'
-    # result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
-    # result_path = './outdir/bert/facts/927927e50ca941ceb7a0b09b51fe54fb_0_250_0_False_last-i_249.json'
-    # result_path = './outdir/bert/both/987cd7bdc92b42afab32772c509aa246_0_10000_0_False_last-i_291.json'
+    # result_path = './outdir/legal_bert/facts/f1f984acd35b4283947585cac74ed6bd_0_250_0_False_last-i_203.json'
+    # # result_path = './outdir/bert/facts/influence_results_tmp_0_False_last-i_294.json'
+    # # result_path = './outdir/bert/facts/927927e50ca941ceb7a0b09b51fe54fb_0_250_0_False_last-i_249.json'
+    # # result_path = './outdir/bert/both/987cd7bdc92b42afab32772c509aa246_0_10000_0_False_last-i_291.json'
 
     # baseline_linear(tokenized_dir, result_path)
+    # influence_merge('./outdir/legal_bert/facts/')
 
+    result_path = './outdir/legal_bert/facts/all.json'
     baseline_applied(tokenized_dir, result_path)
     baseline_avg(tokenized_dir, result_path)
     baseline_outcome(tokenized_dir, result_path)
