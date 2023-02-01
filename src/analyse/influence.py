@@ -56,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument("--test", dest='test', action='store_true')
     parser.add_argument("--input", type=str, default="facts", required=False)  # arguments
     parser.add_argument("--model", type=str, default="bert", required=False)
+    parser.add_argument("--arch", type=str, default="classify", required=False)
     parser.add_argument("--start", type=int, default=0, required=False)
     parser.add_argument("--end", type=int, default=10000, required=False)
     args = parser.parse_args()
@@ -69,7 +70,11 @@ if __name__ == '__main__':
 
     sys.path.insert(0, '../train')
     # find the last trained model
-    model_path = '../train/trained_models/precedent/'
+    if args.arch == "joint":
+        model_path = '../train/trained_models/precedent/joint/'
+    else:
+        model_path = '../train/trained_models/precedent/'
+
     model_path = find_best(model_path, args.input, args.model)
     print(f'Best test F1: {get_score(model_path, "test")[1]}, val F1: {get_score(model_path, "val")[1]}')
     # Toy data model test:
@@ -79,7 +84,7 @@ if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + args.model
     # tokenizer_dir, test, log, max_len, batch_size
-    loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size, args.input)
+    loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size, args.arch, args.input)
     # loader = TestData(args.batch_size, None)
     train_dataloader, val_dataloader, test_dataloader = loader.load(args.start, args.end)
 
@@ -87,7 +92,11 @@ if __name__ == '__main__':
     config = ptif.get_default_config()
     config['gpu'] = args.gpu
     config['test_sample_num'] = False
-    config['num_classes'] = 14
+
+    if args.arch == "joint":
+        config['num_classes'] = 42
+    else:
+        config['num_classes'] = 14
     # config['recursion_depth'] = 1000
     # config['test_start_index'] = 10
     influences = ptif.calc_img_wise(config, model, train_dataloader, test_dataloader, model_path, args.start, args.end)

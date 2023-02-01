@@ -6,7 +6,7 @@ import numpy as np
 
 class DataPrep:
 
-    def __init__(self, tokenizer_dir, test, log, max_len, batch_size, input, not_random=False):
+    def __init__(self, tokenizer_dir, test, log, max_len, batch_size, arch, input, not_random=False):
         self.tokenized_dir = tokenizer_dir
         self.test = test
         self.log = log
@@ -14,6 +14,7 @@ class DataPrep:
         self.batch_size = batch_size
         self.input = input
         self.not_random = not_random
+        self.arch = arch
 
     def make_loader(self, input, mask, labels, claims, train=True):
         labels = torch.tensor(labels)
@@ -25,6 +26,15 @@ class DataPrep:
             sampler = SequentialSampler(data)
         dataloader = DataLoader(data, sampler=sampler, batch_size=self.batch_size)
         return dataloader
+
+    def three_way(self, b_labels):
+
+        D_out = int(b_labels.shape[1] / 2)
+        y = torch.zeros(b_labels.shape[0], D_out).long()
+        y[torch.from_numpy(b_labels[:, :D_out]==1)] = 1
+        y[torch.from_numpy(b_labels[:, D_out:]==1)] = 2
+
+        return y
 
     def load(self, start=None, end=None):
         with open("../" + self.tokenized_dir + "/tokenized_train.pkl", "rb") as f:
@@ -42,7 +52,7 @@ class DataPrep:
         if self.test:
             t_start = 0
             test_size = 6
-            t_size = 2
+            t_size = 6
         elif start != None and end != None:
             print(f"Dataloader chunk {start} to {end}.")
             t_size = end
@@ -72,7 +82,7 @@ class DataPrep:
         elif self.input == 'both':
             print("Arguments and facts in training data")
             train_inputs = torch.cat([train_facts, train_arguments], dim=0)
-            train_masks =  torch.cat([train_masks, train_masks_arguments], dim=0)
+            train_masks = torch.cat([train_masks, train_masks_arguments], dim=0)
             val_inputs = torch.cat([val_facts, val_arguments], dim=0)
             val_masks = torch.cat([val_masks, val_masks_arguments], dim=0)
             test_inputs = test_facts
@@ -93,16 +103,35 @@ class DataPrep:
         pos_val_labels = val_outcomes[:test_size, :]
         pos_test_labels = test_outcomes[t_start:t_size, :]
 
-        train_labels = pos_train_labels
-        val_labels = pos_val_labels
-        test_labels = pos_test_labels
+        neg_train_labels = train_claims[:test_size, :] - train_outcomes[:test_size, :]
+        neg_val_labels = val_claims[:test_size, :] - val_outcomes[:test_size, :]
+        neg_test_labels = test_claims[:test_size, :] - test_outcomes[:test_size, :]
+
+        neg_val_labels[neg_val_labels < 0] = 0
+        neg_train_labels[neg_train_labels < 0] = 0
+        neg_test_labels[neg_test_labels < 0] = 0
+
+        if self.arch == 'joint':
+            train_labels = self.three_way(np.concatenate((pos_train_labels, neg_train_labels), axis=1))
+            val_labels = self.three_way(np.concatenate((pos_val_labels, neg_val_labels), axis=1))
+            test_labels = self.three_way(np.concatenate((pos_test_labels, neg_test_labels), axis=1))
+            # D_out = int(b_labels.shape[1] / 2)
+            # y = torch.zeros(b_labels.shape[0], D_out).long().to(self.device)
+            # y[b_labels[:, :D_out].bool()] = 1
+            # y[b_labels[:, D_out:].bool()] = 2
+            #
+            # b_labels = y
+
+        else:
+            train_labels = pos_train_labels
+            val_labels = pos_val_labels
+            test_labels = pos_test_labels
+
+        self.n_labels = len(train_labels[1])
 
         claim_train_labels = train_claims[:test_size, :]
         claim_val_labels = val_claims[:test_size, :]
         claim_test_labels = test_claims[t_start:t_size, :]
-
-
-        self.n_labels = len(train_labels[1])
 
         # Create the DataLoader for our training set
         if self.not_random:

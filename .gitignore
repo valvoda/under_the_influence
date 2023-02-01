@@ -14,3 +14,4 @@
 !/src/train/trained_models/*/*/*/*/results.csv
 !/src/train/trained_models/*/*/*/*/embeddings.pkl
 /src/analyse/outdir
+/src/analyse/influence.drawio

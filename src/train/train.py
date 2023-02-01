@@ -1,7 +1,7 @@
 import sys
 sys.path.append("../../")
 
-from models.bert_classifier import BertClassifier
+from models.bert_classifier import BertClassifier, JointClassifier
 # from models.bert_classifier import TestClassifier
 from logger import Logger
 from src.preprocess.data_loader import DataPrep
@@ -25,14 +25,23 @@ class Classifier:
     def __init__(self, model, args):
         self.args = args
         self.device = self.set_cuda()
-        self.model = BertClassifier(model, args, self.device)
+
+        if args.arch == "classifier":
+            self.model = BertClassifier(model, args, self.device)
+        elif args.arch == "joint":
+            self.model = JointClassifier(model, args, self.device)
+
         self.optimizer = AdamW(self.model.parameters(),
                           lr=args.learning_rate, # lr=5e-5,    # Default learning rate
                           eps=1e-8    # Default epsilon value
                           )
         # Set up the learning rate scheduler
         self.scheduler = None
-        self.loss_fn = nn.BCEWithLogitsLoss(reduction='none')
+
+        if args.arch == "classifier":
+            self.loss_fn = nn.BCEWithLogitsLoss(reduction='none')
+        elif args.arch == "joint":
+            self.loss_fn = nn.CrossEntropyLoss(reduction='none')
 
         # MULTI GPU support:
         if self.device == "cuda" and torch.cuda.device_count() > 1:
@@ -88,13 +97,20 @@ class Classifier:
 
             logits = self.model(input_ids=b_input_ids, attention_mask=b_attn_mask)
 
-            loss = self.loss_fn(logits, b_labels.float())
+            if self.args.arch == 'joint':
+                loss = self.loss_fn(logits.reshape(-1, 3), b_labels.reshape(-1))
+            else:
+                loss = self.loss_fn(logits, b_labels.float())
+
             loss = torch.mean(loss)
 
             batch_loss += loss.detach().item()
             total_loss += loss.detach().item()
 
-            preds = torch.round(torch.sigmoid(logits))
+            if self.args.arch == 'joint':
+                preds = logits.reshape(b_input_ids.shape[0], -1, 3).argmax(-1)
+            else:
+                preds = torch.round(torch.sigmoid(logits))
 
             all_truths += b_labels.cpu().float().tolist()
             all_preds += preds.cpu().float().tolist()
@@ -123,10 +139,20 @@ class Classifier:
                     t0_batch = time.time()
 
         results = {}
-        results[eval+"_accuracy"] = accuracy_score(all_truths, all_preds) * 100
-        results[eval+"_f1"] = f1_score(all_truths, all_preds, average="micro") * 100
-        results[eval+"_precision"] = precision_score(all_truths, all_preds, average="micro") * 100
-        results[eval+"_recall"] = recall_score(all_truths, all_preds, average="micro") * 100
+        if self.args.arch == 'joint':
+            results[eval + "_accuracy"] = accuracy_score(np.array(all_truths) == 1,
+                                  np.array(all_preds) == 1) * 100
+            results[eval + "_f1"] = f1_score(np.array(all_truths) == 1,
+                                  np.array(all_preds) == 1, average="micro") * 100
+            results[eval + "_precision"] = precision_score(np.array(all_truths) == 1,
+                                  np.array(all_preds) == 1, average="micro") * 100
+            results[eval + "_recall"] = recall_score(np.array(all_truths) == 1,
+                                  np.array(all_preds) == 1, average="micro") * 100
+        else:
+            results[eval+"_accuracy"] = accuracy_score(all_truths, all_preds) * 100
+            results[eval+"_f1"] = f1_score(all_truths, all_preds, average="micro") * 100
+            results[eval+"_precision"] = precision_score(all_truths, all_preds, average="micro") * 100
+            results[eval+"_recall"] = recall_score(all_truths, all_preds, average="micro") * 100
         results[eval+"_loss"] = total_loss / len(dataloader)
         outputs = {}
         outputs['truths'] = all_truths
@@ -197,7 +223,7 @@ class Classifier:
         self.log.save_results({**val, **test}, outputs)
 
     def run(self, tokenized_dir=None, test=False):
-        loader = DataPrep(tokenized_dir, test, self.log, self.args.max_len, self.args.batch_size, self.args.input)
+        loader = DataPrep(tokenized_dir, test, self.log, self.args.max_len, self.args.batch_size, self.args.arch, self.args.input)
         # loader = TestData(self.args.batch_size, self.log)
         train_dataloader, val_dataloader, test_dataloader = loader.load()
         self.train(train_dataloader, val_dataloader, test_dataloader)
@@ -212,10 +238,12 @@ if __name__ == '__main__':
     parser.add_argument("--n_hidden", type=int, default=50, required=False)
     parser.add_argument("--epochs", type=int, default=10, required=False)
     parser.add_argument("--model", type=str, default="bert", required=False)
+    parser.add_argument("--arch", type=str, default="classifier", required=False)
     parser.add_argument("--dataset", type=str, default="precedent", required=False) # precedent, alleged
     parser.add_argument("--input", type=str, default="facts", required=False) # arguments
     parser.add_argument("--test", dest='test', action='store_true')
     parser.add_argument("--out_dim", type=int, default=14, required=False)
+
 
     args = parser.parse_args()
     print(args)

@@ -83,7 +83,9 @@ def calc_loss(y, t):
     # loss = torch.nn.functional.nll_loss(
     #     y, t, weight=None, reduction='mean')
 
-    loss = torch.nn.functional.binary_cross_entropy_with_logits(y.squeeze(0), t.float())
+    # TODO wire in architecture type to set correct loss function
+    loss = torch.nn.functional.cross_entropy(y.reshape(-1, 3), t.reshape(-1))
+    # loss = torch.nn.functional.binary_cross_entropy_with_logits(y.squeeze(0), t.float())
     loss = torch.mean(loss)
 
     return loss

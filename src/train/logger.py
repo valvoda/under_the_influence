@@ -10,7 +10,7 @@ class Logger:
         self.precedent = None
         self.args = args
         self.id = uuid.uuid4().hex
-        self.path = "trained_models/" + args.dataset + "/" + args.model + "/" + args.input + "/" + self.id + "/"
+        self.path = "trained_models/" + args.dataset + "/" + args.arch + "/" + args.model + "/" + args.input + "/" + self.id + "/"
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
     def save_model(self, model):

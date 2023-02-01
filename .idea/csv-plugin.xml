@@ -3,6 +3,20 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="/datasets/human_evaluation/ranking_sheet.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/datasets/human_evaluation/truth_sheet.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/src/train/trained_models/precedent/bert/both/88948b7d091f4bf383b3f574d216c40a/outputs.csv">
           <value>
             <Attribute>
@@ -46,6 +60,13 @@
           </value>
         </entry>
         <entry key="/src/train/trained_models/precedent/bert/facts/b5c78e5c1a3c46c3bc725bee281cae51/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/joint/bert/facts/0ea64af9bea04fe182f24414a586915a/results.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
