@@ -455,7 +455,7 @@ def calc_img_wise(config, model, train_loader, test_loader, model_path, start, e
     influences_meta = copy.deepcopy(config)
     test_sample_num = config['test_sample_num']
     test_start_index = config['test_start_index']
-    outdir = Path(config['outdir']+"/"+"/".join(model_path.split('/')[-3:-1]))
+    outdir = Path(config['outdir']+"/"+"/".join(model_path.split('/')[-4:-1]))
     outdir.mkdir(exist_ok=True, parents=True)
 
     # If calculating the influence for a subset of the whole dataset,

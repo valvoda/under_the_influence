@@ -71,9 +71,9 @@ if __name__ == '__main__':
     sys.path.insert(0, '../train')
     # find the last trained model
     if args.arch == "joint":
-        model_path = '../train/trained_models/precedent/joint/'
+        model_path = '../train/trained_models/precedent/joint'
     else:
-        model_path = '../train/trained_models/precedent/'
+        model_path = '../train/trained_models/precedent'
 
     model_path = find_best(model_path, args.input, args.model)
     print(f'Best test F1: {get_score(model_path, "test")[1]}, val F1: {get_score(model_path, "val")[1]}')

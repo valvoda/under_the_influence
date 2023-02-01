@@ -105,7 +105,7 @@ class DataPrep:
 
         neg_train_labels = train_claims[:test_size, :] - train_outcomes[:test_size, :]
         neg_val_labels = val_claims[:test_size, :] - val_outcomes[:test_size, :]
-        neg_test_labels = test_claims[:test_size, :] - test_outcomes[:test_size, :]
+        neg_test_labels = test_claims[t_start:t_size, :] - test_outcomes[t_start:t_size, :]
 
         neg_val_labels[neg_val_labels < 0] = 0
         neg_train_labels[neg_train_labels < 0] = 0
