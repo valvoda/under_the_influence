@@ -8,8 +8,11 @@ do
       do
         for model in bert
         do
-          echo ${lr} ${hidden} ${dropout} ${inp} ${model}
-          LR=$lr HIDDEN=$hidden DROP=$dropout  INP=$inp MOD=$model bash run.euler
+          for arch in joint
+          do
+            echo ${lr} ${hidden} ${dropout} ${inp} ${model} ${arch}
+            LR=$lr HIDDEN=$hidden DROP=$dropout INP=$inp MOD=$model ARCH=$arch sbatch run.wilkes3
+          done
         done
       done
     done
