@@ -1,0 +1,12 @@
+for start in {0..900..50};
+do
+  for model in bert
+  do
+    for arch in joint
+    do
+      end=$((start+50))
+      echo "${start} ${end} ${arch} ${model}"
+      START=$start END=$end MOD=$model ARCH=$arch sbatch run.wilkes
+    done
+  done
+done
