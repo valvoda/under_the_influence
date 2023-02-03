@@ -453,7 +453,7 @@ def baseline_linear(tokenized_dir, result_path):
 def influence_merge(dir_path):
     all_influences = []
 
-    for i in range(250, 1250, 250):
+    for i in range(50, 1000, 50):
         with open(dir_path + str(i) + ".json", 'r') as jsonFile:
             all_influences.append(json.load(jsonFile))
 
@@ -479,11 +479,19 @@ if __name__ == '__main__':
     # baseline_linear(tokenized_dir, result_path)
     # --------------
 
-    # influence_merge('./outdir/legal_bert/facts/')
+    # influence_merge('./outdir/joint/bert/facts/')
     #
     # result_path = './outdir/legal_bert/facts/all.json'
     # baseline_applied(tokenized_dir, result_path)
     # baseline_avg(tokenized_dir, result_path)
+
+    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
+    result_path = './outdir/joint/bert/facts/all.json'
+    print("joint_bert narrow")
+    baseline_outcome(tokenized_dir, result_path, True, None)
+    print("joint_bert wide")
+    baseline_outcome(tokenized_dir, result_path, False, None)
+
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
     result_path = './outdir/legal_bert/facts/all.json'

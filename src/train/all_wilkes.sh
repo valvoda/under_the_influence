@@ -6,7 +6,7 @@ do
     do
       for inp in facts
       do
-        for model in bert
+        for model in legal_bert
         do
           for arch in joint
           do
