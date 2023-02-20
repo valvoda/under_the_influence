@@ -139,6 +139,7 @@ def baseline_outcome(tokenized_dir, result_path, cited=False, art_range=None):
     all_negative_applied = []
     all_positive_distinguished = []
     all_negative_distinguished = []
+    all_influences = []
 
     for i in range(len(test_ids)):
 
@@ -149,37 +150,59 @@ def baseline_outcome(tokenized_dir, result_path, cited=False, art_range=None):
 
         for j in range(len(train_outcomes)):
             cited_constrain = check_cited(cited, precedent_dic, i, j)
-
             positive_applied, negative_applied, positive_distinguished, negative_distinguished = taxonomy(cited_constrain, negative_precedent, negative_outcomes, test_outcomes, train_outcomes, test_claims, train_claims, positive_applied, negative_applied, positive_distinguished, negative_distinguished, i, j, art_range)
 
-        if 1 in positive_applied:
-            # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
-            corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_applied)[0]
-            all_positive_applied.append(corr)
+        all_positive_applied += positive_applied
+        all_negative_applied += negative_applied
+        all_positive_distinguished += positive_distinguished
+        all_negative_distinguished += negative_distinguished
 
-        if 1 in negative_applied:
-            corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_applied)[0]
-            all_negative_applied.append(corr)
+        all_influences += list(np.array(results[str(i)]['influence'])*-1)
 
-        if 1 in positive_distinguished:
-            corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_distinguished)[0]
-            all_positive_distinguished.append(corr)
+        # if 1 in positive_applied:
+        #     # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_applied)[0]
+        #     all_positive_applied.append(corr)
+        #
+        # if 1 in negative_applied:
+        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_applied)[0]
+        #     all_negative_applied.append(corr)
+        #
+        # if 1 in positive_distinguished:
+        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_distinguished)[0]
+        #     all_positive_distinguished.append(corr)
+        #
+        # if 1 in negative_distinguished:
+        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_distinguished)[0]
+        #     all_negative_distinguished.append(corr)
 
-        if 1 in negative_distinguished:
-            corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_distinguished)[0]
-            all_negative_distinguished.append(corr)
+    # corr_positive_applied = np.average(all_positive_applied)
+    # corr_negative_applied = np.average(all_negative_applied)
+    # corr_positive_distinguished = np.average(all_positive_distinguished)
+    # corr_negative_distinguished = np.average(all_negative_distinguished)
 
-    corr_positive_applied = np.average(all_positive_applied)
-    corr_negative_applied = np.average(all_negative_applied)
-    corr_positive_distinguished = np.average(all_positive_distinguished)
-    corr_negative_distinguished = np.average(all_negative_distinguished)
+    corr_positive_applied = stats.spearmanr(all_influences, all_positive_applied)[0]
+    corr_negative_applied = stats.spearmanr(all_influences, all_negative_applied)[0]
+    corr_positive_distinguished = stats.spearmanr(all_influences, all_positive_distinguished)[0]
+    corr_negative_distinguished = stats.spearmanr(all_influences, all_negative_distinguished)[0]
 
-    print('Positive Applied Correlation:', np.average(all_positive_applied))
-    print('Negative Applied Correlation:', np.average(all_negative_applied))
-    print('Positive Distinguished Correlation:', np.average(all_positive_distinguished))
-    print('Negative Distinguished Correlation:', np.average(all_negative_distinguished))
+    # print('Positive Applied Correlation:', np.average(all_positive_applied))
+    # print('Negative Applied Correlation:', np.average(all_negative_applied))
+    # print('Positive Distinguished Correlation:', np.average(all_positive_distinguished))
+    # print('Negative Distinguished Correlation:', np.average(all_negative_distinguished))
 
-    return [corr_positive_applied, corr_negative_applied, corr_positive_distinguished, corr_negative_distinguished]
+    print('Positive Applied Correlation:', corr_positive_applied)
+    print('Negative Applied Correlation:', corr_negative_applied)
+    print('Positive Distinguished Correlation:', corr_positive_distinguished)
+    print('Negative Distinguished Correlation:', corr_negative_distinguished)
+
+    model_influences = all_influences + all_influences + all_influences + all_influences
+    model_precedents = all_positive_applied + all_negative_applied + all_positive_distinguished + all_negative_distinguished
+
+    print('Correlation All:', stats.spearmanr(model_influences, model_precedents)[0])
+
+
+    return [corr_positive_applied, corr_negative_applied, corr_positive_distinguished, corr_negative_distinguished], model_influences, model_precedents
 
 
 def baseline_art(tokenized_dir, result_path):
@@ -467,6 +490,42 @@ def influence_merge(dir_path):
 
         json.dump(new_dic, outFile, indent=2)
 
+def average_scores(tokenized_dir, result_path):
+    train_ids, test_ids, test_precedent, train_outcomes, test_outcomes, train_claims, test_claims = initialise_data(
+        tokenized_dir)
+    test_precedent = numerize_precedent(train_ids, test_precedent)
+
+    with open(result_path, 'r') as jsonFile:
+        results = json.load(jsonFile)
+
+    precedent_influences = []
+    other_influences = []
+    for i in range(len(test_ids)):
+        tp = test_precedent[i]
+        for j in range(len(train_outcomes)):
+            influence = results[str(i)]['influence'][j]
+            if j in tp:
+                precedent_influences.append(influence*-1)
+            else:
+                other_influences.append(influence*-1)
+
+    print("cited:", np.average(precedent_influences))
+    print("not cited:", np.average(other_influences))
+
+def correlation_run(tokenized_dir, result_path):
+    all_influences, all_precedents = [], []
+    # print("average")
+    # average_scores(tokenized_dir, result_path)
+    print("narrow")
+    _, correlations, precedents = baseline_outcome(tokenized_dir, result_path, True, None)
+    all_influences += correlations
+    all_precedents += precedents
+    print("wide")
+    _, correlations, precedents = baseline_outcome(tokenized_dir, result_path, False, None)
+    all_influences += correlations
+    all_precedents += precedents
+    print('Overall Correlation SPEARMAN:', stats.spearmanr(all_influences, all_precedents)[0])
+    print('Overall Correlation PEARSON:', stats.pearsonr(all_influences, all_precedents)[0])
 
 if __name__ == '__main__':
     # tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
@@ -479,39 +538,29 @@ if __name__ == '__main__':
     # baseline_linear(tokenized_dir, result_path)
     # --------------
 
-    # influence_merge('./outdir/joint/bert/facts/')
+    # influence_merge('./outdir/joint/legal_bert/facts/')
     #
     # result_path = './outdir/legal_bert/facts/all.json'
     # baseline_applied(tokenized_dir, result_path)
     # baseline_avg(tokenized_dir, result_path)
 
-    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
-    result_path = './outdir/joint/bert/facts/all.json'
-    print("joint_bert narrow")
-    baseline_outcome(tokenized_dir, result_path, True, None)
-    print("joint_bert wide")
-    baseline_outcome(tokenized_dir, result_path, False, None)
-
+    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
+    result_path = './outdir/joint/legal_bert/facts/all.json'
+    print("\n joint_legal_bert")
+    correlation_run(tokenized_dir, result_path)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
     result_path = './outdir/legal_bert/facts/all.json'
-    print("legal_bert narrow")
-    baseline_outcome(tokenized_dir, result_path, True, None)
-    print("legal_bert wide")
-    baseline_outcome(tokenized_dir, result_path, False, None)
+    print("\n legal_bert")
+    correlation_run(tokenized_dir, result_path)
+
+    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
+    result_path = './outdir/joint/bert/facts/all.json'
+    print("\n joint_bert")
+    correlation_run(tokenized_dir, result_path)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
     result_path = './outdir/bert/facts/all.json'
-    print("bert narrow")
-    baseline_outcome(tokenized_dir, result_path, True, None)
-    print("bert wide")
-    baseline_outcome(tokenized_dir, result_path, False, None)
+    print("\n bert")
+    correlation_run(tokenized_dir, result_path)
 
-
-    # _, _, _, train_outcomes, _, _, _ = initialise_data(tokenized_dir)
-    # size = train_outcomes.shape[1]
-    # for i in range(size):
-    #     print("Article ", i)
-    #     baseline_outcome(tokenized_dir, result_path, True, [i,i+1])
-    # # baseline_outcome(tokenized_dir, result_path, True)
-    # # baseline_art(tokenized_dir, result_path)

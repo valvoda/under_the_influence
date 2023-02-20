@@ -46,7 +46,7 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default="bert", required=False)  # arguments
     args = parser.parse_args()
 
-    path = '../train/trained_models/precedent/'
+    path = '../train/trained_models/precedent/joint/'
     best_path = find_best(path, args.input, args.model)
     print(best_path)
     print(f'Best test F1: {get_score(best_path, "test")[1]}, val F1: {get_score(best_path, "val")[1]}')

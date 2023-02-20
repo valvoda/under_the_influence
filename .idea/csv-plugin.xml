@@ -45,6 +45,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/src/train/trained_models/precedent/bert/facts/0c08a7046adf4baf8057c209920eec84/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/src/train/trained_models/precedent/bert/facts/ace854efc2ee4732a222cf30aaca4b04/outputs.csv">
           <value>
             <Attribute>
@@ -53,6 +60,13 @@
           </value>
         </entry>
         <entry key="/src/train/trained_models/precedent/bert/facts/ace854efc2ee4732a222cf30aaca4b04/results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/src/train/trained_models/precedent/bert/facts/b5c78e5c1a3c46c3bc725bee281cae51/outputs.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
