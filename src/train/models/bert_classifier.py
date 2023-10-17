@@ -187,7 +187,7 @@ class JointClassifier(nn.Module):
             nn.Linear(H, D_out * 3)
         )
 
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids, attention_mask, global_attention):
         """
         Feed input to BERT and the classifier to compute logits.
         @param    input_ids (torch.Tensor): an input tensor with shape (batch_size,
@@ -199,7 +199,7 @@ class JointClassifier(nn.Module):
         """
 
         # Feed input to BERT
-        outputs = self.model(input_ids, attention_mask=attention_mask)
+        outputs = self.model(input_ids, attention_mask=attention_mask, global_attention_mask=global_attention)
 
         # Extract the last hidden state of the token `[CLS]` for classification task
         last_hidden_state_cls = outputs.last_hidden_state[:, 0, :]
