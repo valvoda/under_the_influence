@@ -1,11 +1,8 @@
-# 100 200 300
-for hidden in 50
+for hidden in 50 100 200 300
 do
-  #  0.1 0.3 0.4
-  for dropout in 0.2
+  for dropout in 0.2 0.1 0.3 0.4
   do
-    #  0.0003 0.000003
-    for lr in 0.00003
+    for lr in 0.00003 0.0003 0.000003
     do
       for inp in facts
       do
