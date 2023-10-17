@@ -254,7 +254,8 @@ if __name__ == '__main__':
     elif args.model == "longformer":
         model = LongformerModel.from_pretrained('allenai/longformer-base-4096', gradient_checkpointing=True,
                                                 return_dict=True)
-        args.max_len = 4096
+        if not args.test:
+            args.max_len = 4096
     else:
         print("Error: Unsupported Model")
 
