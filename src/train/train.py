@@ -252,6 +252,10 @@ if __name__ == '__main__':
         model = BertModel.from_pretrained('bert-base-uncased', gradient_checkpointing=True, return_dict=True)
     elif args.model == "legal_bert":
         model = AutoModel.from_pretrained("nlpaueb/legal-bert-base-uncased", return_dict=True)
+    elif args.model == "longformer":
+        model = LongformerModel.from_pretrained('allenai/longformer-base-4096', gradient_checkpointing=True,
+                                                return_dict=True)
+        args.max_length = 4096
     else:
         print("Error: Unsupported Model")
 
