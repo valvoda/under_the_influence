@@ -95,7 +95,10 @@ class Classifier:
             b_input_ids = b_input_ids.squeeze(1)
             b_attn_mask = b_attn_mask.squeeze(1)
 
-            logits = self.model(input_ids=b_input_ids, attention_mask=b_attn_mask)
+            global_attention_mask = torch.zeros(b_input_ids.shape, dtype=torch.long, device=self.device)
+            global_attention_mask[:, [0]] = 1
+
+            logits = self.model(input_ids=b_input_ids, attention_mask=b_attn_mask, global_attention=global_attention_mask)
 
             if self.args.arch == 'joint':
                 loss = self.loss_fn(logits.reshape(-1, 3), b_labels.reshape(-1))
