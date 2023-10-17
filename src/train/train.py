@@ -246,7 +246,6 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
-    print(args)
 
     if args.model == "bert":
         model = BertModel.from_pretrained('bert-base-uncased', gradient_checkpointing=True, return_dict=True)
@@ -259,6 +258,7 @@ if __name__ == '__main__':
     else:
         print("Error: Unsupported Model")
 
+    print(args)
     tokenized_dir = "../datasets/" + args.dataset + "/" + args.model
 
     cl = Classifier(model, args)
