@@ -21,17 +21,20 @@ def find_best(root, input, model):
     # for dir in os.listdir(root):
         # if not dir.startswith('.') and (dir == 'claims' or dir == 'baseline_positive'):
     best_loss = 100.0
+    cnt = 0
     for experiment in os.listdir(root + "/" + model + "/" + input + "/"):
         if not experiment.startswith('.'):
             path = root + "/" + model + "/" + input + "/" + experiment
             try:
                 val_loss, val_f1 = get_score(path)
+                cnt += 1
             except:
                 val_loss = 101
             if val_loss < best_loss:
                 # print(path, val_f1)
                 best_loss = val_loss
                 best_path = path
+    print("Number of Experiments: ", cnt)
 
     return best_path
 
