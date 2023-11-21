@@ -1,6 +1,6 @@
 for start in {0..900..50};
 do
-  for model in legal_bert
+  for model in longformer
   do
     for arch in joint
     do
