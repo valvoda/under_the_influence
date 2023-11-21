@@ -84,6 +84,9 @@ if __name__ == '__main__':
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + args.model
     # tokenizer_dir, test, log, max_len, batch_size
+    if args.model == 'longformer':
+        args.max_len = 4096
+
     loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size, args.arch, args.input)
     # loader = TestData(args.batch_size, None)
     train_dataloader, val_dataloader, test_dataloader = loader.load(args.start, args.end)
