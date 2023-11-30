@@ -46,7 +46,11 @@ def s_test(b_input_ids, b_attn_mask, b_labels, b_claims, model, z_loader, gpu=-1
                 x, t = x.cuda(), t.cuda()
                 b_attn_mask = b_attn_mask.to('cuda')
             # y = model(x)
-            y = model(input_ids=x, attention_mask=b_attn_mask)
+            # TODO only for longformer!
+            global_attention_mask = torch.zeros(x.shape, dtype=torch.long, device=model.device)
+            global_attention_mask[:, [0]] = 1
+
+            y = model(input_ids=x, attention_mask=b_attn_mask, global_attention=global_attention_mask)
             loss = calc_loss(y, t)
             params = [ p for p in model.parameters() if p.requires_grad ]
             hv = hvp(loss, params, h_estimate)
@@ -110,7 +114,12 @@ def grad_z(z, b_attn_mask, t, b_claims, model, gpu=-1):
     if gpu >= 0:
         z, t = z.cuda(), t.cuda()
     # y = model(z)
-    y = model(input_ids=z, attention_mask=b_attn_mask)
+
+    # TODO only for longformer!
+    global_attention_mask = torch.zeros(z.shape, dtype=torch.long, device=model.device)
+    global_attention_mask[:, [0]] = 1
+
+    y = model(input_ids=z, attention_mask=b_attn_mask, global_attention=global_attention_mask)
     loss = calc_loss(y, t)
     # Compute sum of gradients from model parameters to loss
     params = [ p for p in model.parameters() if p.requires_grad ]

@@ -10,6 +10,8 @@ import numpy as np
 from scipy import stats
 import math
 from tqdm import tqdm
+import csv
+import ast
 
 
 def find_newest(path):
@@ -97,16 +99,16 @@ def taxonomy(cited_constrain, negative_precedent, negative_outcomes, test_outcom
             # print("PP:", train_outcomes[j])
             # positive
             if 1 in n_p and n_p == test_o:
-                positive_distinguished.append(1)
+                negative_distinguished.append(1)
                 # print("+-")
             else:
-                positive_distinguished.append(0)
+                negative_distinguished.append(0)
             # negative
             if 1 in t_o and t_o == n_o:
                 # print("-+")
-                negative_distinguished.append(1)
+                positive_distinguished.append(1)
             else:
-                negative_distinguished.append(0)
+                positive_distinguished.append(0)
             # print("\n")
         else:
             positive_distinguished.append(0)
@@ -119,16 +121,61 @@ def taxonomy(cited_constrain, negative_precedent, negative_outcomes, test_outcom
 
     return positive_applied, negative_applied, positive_distinguished, negative_distinguished
 
+def cnt_examples(precedents):
+    precedents = np.array(precedents)
+    return len(precedents[precedents==1])
 
-def baseline_outcome(tokenized_dir, result_path, cited=False, art_range=None):
+def create_baseline(split, size):
+    baseline = np.random.random(size)
+    baseline[baseline > split] = 1
+    baseline[baseline < split] = 0
+    return baseline
+
+def baseline_outcome(tokenized_dir, result_path, cited=False, art_range=None, all_predictions=False, all_model_predictions=False):
 
     if art_range is None: art_range = [0, 100]
 
     train_ids, test_ids, test_precedent, train_outcomes, test_outcomes, train_claims, test_claims = initialise_data(
         tokenized_dir)
 
+    correct_results = []
+
+    with open(result_path.split('all.json')[0] + 'outputs.csv') as f:
+        results = csv.reader(f)
+        for row in results:
+            correct_results.append(row[1] == row[2])
+
+    if not all_predictions and all_model_predictions:
+        return AssertionError("Invalid combination: You have to use 'all_preidctions' for 'all_model_predictions'")
+
+    if all_predictions:
+        print('Using All Predictions')
+    else:
+        print('Using only predictions that the model got right.')
+
+    if all_model_predictions:
+        print('Using model predictions as the source for precedent taxonomy.')
+        with open(result_path.split('all.json')[0] + 'outputs.csv') as f:
+            results = list(csv.reader(f))
+
+        x = np.array([ast.literal_eval(row[1]) for row in results])
+
+        if "joint" in result_path:
+            test_outcomes = x.copy()
+            test_outcomes[test_outcomes==2] = 0
+            negative_outcomes = x.copy()
+            negative_outcomes[negative_outcomes == 1] = 0
+            negative_outcomes[negative_outcomes == 2] = 1
+        else:
+            test_outcomes = x
+            negative_outcomes = test_claims - test_outcomes
+            negative_outcomes[negative_outcomes == -1] = 0
+
+    else:
+        print('Using judges predictions as the source for precedent taxonomy.')
+        negative_outcomes = test_claims - test_outcomes
+
     negative_precedent = train_claims - train_outcomes
-    negative_outcomes = test_claims - test_outcomes
 
     with open(result_path, 'r') as jsonFile:
         results = json.load(jsonFile)
@@ -140,69 +187,122 @@ def baseline_outcome(tokenized_dir, result_path, cited=False, art_range=None):
     all_positive_distinguished = []
     all_negative_distinguished = []
     all_influences = []
+    all_any = []
+
+    all_inf_positive_applied = []
+    all_inf_negative_applied = []
+    all_inf_positive_distinguished = []
+    all_inf_negative_distinguished = []
 
     for i in range(len(test_ids)):
 
-        positive_applied = []
-        negative_applied = []
-        positive_distinguished = []
-        negative_distinguished = []
+        if correct_results[i] or all_predictions:
 
-        for j in range(len(train_outcomes)):
-            cited_constrain = check_cited(cited, precedent_dic, i, j)
-            positive_applied, negative_applied, positive_distinguished, negative_distinguished = taxonomy(cited_constrain, negative_precedent, negative_outcomes, test_outcomes, train_outcomes, test_claims, train_claims, positive_applied, negative_applied, positive_distinguished, negative_distinguished, i, j, art_range)
+            positive_applied = []
+            negative_applied = []
+            positive_distinguished = []
+            negative_distinguished = []
+            any_type = []
 
-        all_positive_applied += positive_applied
-        all_negative_applied += negative_applied
-        all_positive_distinguished += positive_distinguished
-        all_negative_distinguished += negative_distinguished
+            for j in range(len(train_outcomes)):
+                cited_constrain = check_cited(cited, precedent_dic, i, j)
+                positive_applied, negative_applied, positive_distinguished, negative_distinguished = taxonomy(cited_constrain, negative_precedent, negative_outcomes, test_outcomes, train_outcomes, test_claims, train_claims, positive_applied, negative_applied, positive_distinguished, negative_distinguished, i, j, art_range)
 
-        all_influences += list(np.array(results[str(i)]['influence'])*-1)
+            all_positive_applied += positive_applied
+            all_negative_applied += negative_applied
+            all_positive_distinguished += positive_distinguished
+            all_negative_distinguished += negative_distinguished
 
-        # if 1 in positive_applied:
-        #     # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
-        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_applied)[0]
-        #     all_positive_applied.append(corr)
-        #
-        # if 1 in negative_applied:
-        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_applied)[0]
-        #     all_negative_applied.append(corr)
-        #
-        # if 1 in positive_distinguished:
-        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_distinguished)[0]
-        #     all_positive_distinguished.append(corr)
-        #
-        # if 1 in negative_distinguished:
-        #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_distinguished)[0]
-        #     all_negative_distinguished.append(corr)
+            # if 1 in positive_applied:
+            #     all_positive_applied += positive_applied
+            #     all_inf_positive_applied += list(np.array(results[str(i)]['influence'])*-1)
+            # if 1 in negative_applied:
+            #     all_negative_applied += negative_applied
+            #     all_inf_negative_applied += list(np.array(results[str(i)]['influence'])*-1)
+            # if 1 in positive_distinguished:
+            #     all_positive_distinguished += positive_distinguished
+            #     all_inf_positive_distinguished += list(np.array(results[str(i)]['influence'])*-1)
+            # if 1 in negative_distinguished:
+            #     all_negative_distinguished += negative_distinguished
+            #     all_inf_negative_distinguished += list(np.array(results[str(i)]['influence'])*-1)
+
+            any_type = np.array(positive_applied) + np.array(negative_applied) + np.array(positive_distinguished) + np.array(negative_distinguished)
+            any_type[any_type > 1] = 1
+            all_any += any_type.tolist()
+
+            # if 1 not in any_type:
+            #     print("Error")
+
+            # print(1 in positive_applied, 1 in negative_applied, 1 in positive_distinguished, 1 in negative_distinguished)
+
+            all_influences += list(np.array(results[str(i)]['influence'])*-1)
+
+            # if 1 in positive_applied:
+            #     # corr = np.correlate(np.array(data[str(i)]['influence'])*-1, precedent_marked)[0]
+            #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_applied)[0]
+            #     all_positive_applied.append(corr)
+            #     # all_positive_applied += positive_applied
+            #
+            # if 1 in negative_applied:
+            #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_applied)[0]
+            #     all_negative_applied.append(corr)
+            #     # all_negative_applied += negative_applied
+            #
+            # if 1 in positive_distinguished:
+            #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, positive_distinguished)[0]
+            #     all_positive_distinguished.append(corr)
+            #     # all_positive_distinguished += positive_distinguished
+            #
+            # if 1 in negative_distinguished:
+            #     corr = stats.spearmanr(np.array(results[str(i)]['influence']) * -1, negative_distinguished)[0]
+            #     all_negative_distinguished.append(corr)
+            #     # all_negative_distinguished += negative_distinguished
 
     # corr_positive_applied = np.average(all_positive_applied)
     # corr_negative_applied = np.average(all_negative_applied)
     # corr_positive_distinguished = np.average(all_positive_distinguished)
     # corr_negative_distinguished = np.average(all_negative_distinguished)
 
+    size = len(all_any)
+    baseline = create_baseline(0.9, size)
+    baseline_10 = stats.spearmanr(all_influences, baseline)[0]
+    baseline = create_baseline(0.5, size)
+    baseline_50 = stats.spearmanr(all_influences, baseline)[0]
+
     corr_positive_applied = stats.spearmanr(all_influences, all_positive_applied)[0]
     corr_negative_applied = stats.spearmanr(all_influences, all_negative_applied)[0]
     corr_positive_distinguished = stats.spearmanr(all_influences, all_positive_distinguished)[0]
     corr_negative_distinguished = stats.spearmanr(all_influences, all_negative_distinguished)[0]
+    corr_any = stats.spearmanr(all_influences, all_any)[0]
+
+    # corr_positive_applied = stats.spearmanr(all_inf_positive_applied, all_positive_applied)[0]
+    # corr_negative_applied = stats.spearmanr(all_inf_negative_applied, all_negative_applied)[0]
+    # corr_positive_distinguished = stats.spearmanr(all_inf_positive_distinguished, all_positive_distinguished)[0]
+    # corr_negative_distinguished = stats.spearmanr(all_inf_negative_distinguished, all_negative_distinguished)[0]
+    # corr_any = stats.spearmanr(all_influences, all_any)[0]
 
     # print('Positive Applied Correlation:', np.average(all_positive_applied))
     # print('Negative Applied Correlation:', np.average(all_negative_applied))
     # print('Positive Distinguished Correlation:', np.average(all_positive_distinguished))
     # print('Negative Distinguished Correlation:', np.average(all_negative_distinguished))
 
-    print('Positive Applied Correlation:', corr_positive_applied)
-    print('Negative Applied Correlation:', corr_negative_applied)
-    print('Positive Distinguished Correlation:', corr_positive_distinguished)
-    print('Negative Distinguished Correlation:', corr_negative_distinguished)
+    print('Baseline 50 Correlation:', baseline_50)
+    print('Baseline 10 Correlation:', baseline_10)
+    print('Positive Applied Correlation:', corr_positive_applied, cnt_examples(all_positive_applied))
+    print('Negative Applied Correlation:', corr_negative_applied, cnt_examples(all_negative_applied))
+    print('Positive Distinguished Correlation:', corr_positive_distinguished, cnt_examples(all_positive_distinguished))
+    print('Negative Distinguished Correlation:', corr_negative_distinguished, cnt_examples(all_negative_distinguished))
+    print('Any Correlation:', corr_any, cnt_examples(all_any))
 
-    model_influences = all_influences + all_influences + all_influences + all_influences
-    model_precedents = all_positive_applied + all_negative_applied + all_positive_distinguished + all_negative_distinguished
+    # model_influences = all_influences + all_influences + all_influences + all_influences
+    # model_precedents = all_positive_applied + all_negative_applied + all_positive_distinguished + all_negative_distinguished
+    # model_precedents = np.array(all_positive_applied) + np.array(all_negative_applied) + np.array(all_positive_distinguished) + np.array(all_negative_distinguished)
+    # model_precedents[model_precedents > 1] = 1
+    # print('Correlation All:', stats.spearmanr(all_influences, model_precedents)[0])
 
-    print('Correlation All:', stats.spearmanr(model_influences, model_precedents)[0])
 
-
-    return [corr_positive_applied, corr_negative_applied, corr_positive_distinguished, corr_negative_distinguished], model_influences, model_precedents
+    return [corr_positive_applied, corr_negative_applied, corr_positive_distinguished, corr_negative_distinguished, corr_any], all_influences, all_any
+    # return None, None, None
 
 
 def baseline_art(tokenized_dir, result_path):
@@ -456,8 +556,13 @@ def baseline_linear(tokenized_dir, result_path):
                 for j in range(len(l_dic)):
                     influences.append(data[str(i)]['influence'][j])
 
-                    # print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
-                    flag = list(l_dic[j]) == data[str(i)]['label']
+                    if 'joint' in result_path:
+                        converted = np.array(data[str(i)]['label'])
+                        converted[converted == 2] = 0
+                        flag = list(l_dic[j]) == converted.tolist()
+                    else:
+                        # print(list(l_dic[j]), data[str(i)]['label'], list(l_dic[j]) == data[str(i)]['label'])
+                        flag = list(l_dic[j]) == data[str(i)]['label']
 
                     if flag:
                         labels.append(1)
@@ -512,20 +617,26 @@ def average_scores(tokenized_dir, result_path):
     print("cited:", np.average(precedent_influences))
     print("not cited:", np.average(other_influences))
 
-def correlation_run(tokenized_dir, result_path):
-    all_influences, all_precedents = [], []
+def correlation_run(tokenized_dir, result_path, all_predictions=False, all_model_predictions=False):
+    all_correlations, all_influences, all_precedents = {}, [], []
     # print("average")
     # average_scores(tokenized_dir, result_path)
-    print("narrow")
-    _, correlations, precedents = baseline_outcome(tokenized_dir, result_path, True, None)
-    all_influences += correlations
-    all_precedents += precedents
     print("wide")
-    _, correlations, precedents = baseline_outcome(tokenized_dir, result_path, False, None)
-    all_influences += correlations
-    all_precedents += precedents
+    correlations, all_influences, wide_precedents = baseline_outcome(tokenized_dir, result_path, False, None, all_predictions, all_model_predictions)
+    all_correlations["wide"] = {'pos_applied': correlations[0], 'neg_applied': correlations[1],
+                                  "pos_distinguished": correlations[2], "neg_distinguished": correlations[3], "all": correlations[4]}
+    print("narrow")
+    correlations, all_influences, narrow_precedents = baseline_outcome(tokenized_dir, result_path, True, None, all_predictions, all_model_predictions)
+    all_correlations["narrow"] = {'pos_applied':correlations[0], 'neg_applied':correlations[1],"pos_distinguished":correlations[2], "neg_distinguished":correlations[3], "all": correlations[4]}
+
+    all_precedents = np.array(wide_precedents) + np.array(narrow_precedents)
+    all_precedents[all_precedents > 1] = 1
+    all_precedents = all_precedents.tolist()
     print('Overall Correlation SPEARMAN:', stats.spearmanr(all_influences, all_precedents)[0])
+    all_correlations["all"] = stats.spearmanr(all_influences, all_precedents)[0]
     print('Overall Correlation PEARSON:', stats.pearsonr(all_influences, all_precedents)[0])
+
+    return all_correlations
 
 if __name__ == '__main__':
     # tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
@@ -535,7 +646,9 @@ if __name__ == '__main__':
     # # result_path = './outdir/bert/facts/927927e50ca941ceb7a0b09b51fe54fb_0_250_0_False_last-i_249.json'
     # # result_path = './outdir/bert/both/987cd7bdc92b42afab32772c509aa246_0_10000_0_False_last-i_291.json'
 
-    # baseline_linear(tokenized_dir, result_path)
+    tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
+    result_path = './outdir/joint/legal_bert/facts/all.json'
+    baseline_linear(tokenized_dir, result_path)
     # --------------
 
     # influence_merge('./outdir/joint/legal_bert/facts/')
@@ -547,20 +660,20 @@ if __name__ == '__main__':
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
     result_path = './outdir/joint/legal_bert/facts/all.json'
     print("\n joint_legal_bert")
-    correlation_run(tokenized_dir, result_path)
+    correlation_run(tokenized_dir, result_path, all_predictions=True, all_model_predictions=False)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'legal_bert'
     result_path = './outdir/legal_bert/facts/all.json'
     print("\n legal_bert")
-    correlation_run(tokenized_dir, result_path)
+    correlation_run(tokenized_dir, result_path, all_predictions=True, all_model_predictions=False)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
     result_path = './outdir/joint/bert/facts/all.json'
     print("\n joint_bert")
-    correlation_run(tokenized_dir, result_path)
+    correlation_run(tokenized_dir, all_predictions=True, all_model_predictions=False)
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + 'bert'
     result_path = './outdir/bert/facts/all.json'
     print("\n bert")
-    correlation_run(tokenized_dir, result_path)
+    correlation_run(tokenized_dir, all_predictions=True, all_model_predictions=False)
 

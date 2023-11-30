@@ -81,6 +81,8 @@ if __name__ == '__main__':
     # model_path = '../train/trained_models/precedent/bert/both/e621d7fd7fcb4535a6b48207e1c03dfd'
     print('loaded:', model_path)
     model = torch.load(model_path + '/model.pt', map_location=torch.device(device))
+    model.device = device
+    model.config = model.model.config
 
     tokenized_dir = "../datasets/" + 'precedent' + "/" + args.model
     # tokenizer_dir, test, log, max_len, batch_size
