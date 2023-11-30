@@ -88,6 +88,7 @@ if __name__ == '__main__':
     # tokenizer_dir, test, log, max_len, batch_size
     if args.model == 'longformer':
         args.max_len = 4096
+        print('Longformer Max Len: 4096')
 
     loader = DataPrep(tokenized_dir, args.test, None, args.max_len, args.batch_size, args.arch, args.input)
     # loader = TestData(args.batch_size, None)
